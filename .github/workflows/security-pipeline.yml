@@ -128,7 +128,7 @@ jobs:
   dast-zap:
     name: DAST - OWASP ZAP Baseline
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -166,7 +166,7 @@ jobs:
 
   security-summary:
     name: Security Summary Report
-    needs: [secrets-detection, sca-audit, sast-codeql, sast-semgrep, container-scan]
+    needs: [secrets-detection, sca-audit, sast-codeql, sast-semgrep, container-scan, dast-zap]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -180,3 +180,4 @@ jobs:
           echo "| SAST (CodeQL) | ${{ needs.sast-codeql.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| SAST (Semgrep) | ${{ needs.sast-semgrep.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Container Scan | ${{ needs.container-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DAST (OWASP ZAP) | ${{ needs.dast-zap.result }} |" >> $GITHUB_STEP_SUMMARY
