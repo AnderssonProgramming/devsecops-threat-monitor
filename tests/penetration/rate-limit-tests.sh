@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly WEBHOOK_URL="${WEBHOOK_URL:-http://localhost:3002/webhooks/traffic-event}"
+readonly BEARER_TOKEN="${WEBHOOK_BEARER_TOKEN:-test-token}"
+readonly REQUESTS="${REQUESTS:-50}"
+
+function send_request() {
+  curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "${WEBHOOK_URL}" \
+    -H "Authorization: Bearer ${BEARER_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d '{"eventType":"traffic_jam","severity":"HIGH"}'
+}
+
+function main() {
+  local rate_limited
+  local response
+  local index
+
+  rate_limited=0
+
+  echo "=== TC-03: Rate Limit DoS Test ==="
+  echo "Sending ${REQUESTS} requests..."
+
+  for index in $(seq 1 "${REQUESTS}"); do
+    response="$(send_request)"
+    if [ "${response}" = "429" ]; then
+      rate_limited=$((rate_limited + 1))
+    fi
+  done
+
+  if [ "${rate_limited}" -gt 0 ]; then
+    echo "  PASS: Rate limiter triggered after $((REQUESTS - rate_limited)) requests (${rate_limited} blocked)"
+  else
+    echo "  FAIL: No requests were rate-limited - DoS protection ineffective"
+    exit 1
+  fi
+}
+
+main
