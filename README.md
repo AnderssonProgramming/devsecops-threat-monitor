@@ -1,229 +1,107 @@
-# DevSecOps Threat Monitor
+# DevSecOps Threat Monitor for LogiFlow
 
-> Continuous Monitoring and Threat Detection in Production  
-> Course: IT Security and Privacy (SPTI)  
-> Professor: Javier Ivan Toquica Barrera  
-> Institution: Escuela Colombiana de Ingenieria Julio Garavito
+![ECI](https://img.shields.io/badge/ECI-Escuela%20Colombiana%20de%20Ingenieria-0ea5e9?style=for-the-badge)
+![MIT License](https://img.shields.io/badge/License-MIT-16a34a?style=for-the-badge)
+![Security Pipeline](https://img.shields.io/github/actions/workflow/status/AnderssonProgramming/devsecops-threat-monitor/security-pipeline.yml?branch=main&label=Security%20Pipeline&style=for-the-badge)
+![OWASP ZAP](https://img.shields.io/badge/OWASP%20ZAP-DAST%20Enabled-f97316?style=for-the-badge)
+![SonarCloud](https://img.shields.io/badge/SonarCloud-Quality%20Gate-blue?style=for-the-badge)
 
-## Seminar Theme
+**Institution:** Escuela Colombiana de Ingenieria Julio Garavito  
+**Course:** SPTI - Seguridad y Privacidad de Tecnologias de la Informacion  
+**Professor:** Javier Ivan Toquica Barrera  
+**Team:** Andersson David Sanchez Mendez, Cristian Santiago Pedraza Rodriguez, Jeisson David Sanchez Gomez
 
-**Continuous Monitoring and Threat Detection in Production (DevSecOps Focus)**
+This repository implements a complete DevSecOps security monitoring layer for the LogiFlow production-style distributed system.
 
-This repository contains the working progress for a seminar designed for the SPTI course.  
-The core idea is simple: **security is not a one-time gate; it is a production-time capability.**
-
----
-
-## Why This Topic Matters
-
-Modern systems are deployed many times per day, run on distributed infrastructure, and depend on third-party packages, APIs, and cloud services. Traditional security models that rely only on pre-release checks are not enough.
-
-In DevSecOps, we need to answer in real time:
-
-- Are we under attack right now?
-- How fast can we detect suspicious behavior?
-- Can we respond without stopping business operations?
-- Are we learning from incidents and improving detections continuously?
-
----
-
-## Seminar Goal
-
-Build a practical understanding of how to design and operate a **continuous security monitoring capability** for production environments, integrating:
-
-- Secure SDLC and shift-left controls
-- Runtime observability and security telemetry
-- Detection engineering and alert quality
-- Incident response and feedback loops
-
----
-
-## Learning Objectives
-
-By the end of the seminar, participants should be able to:
-
-1. Explain the difference between preventive controls and detective controls in DevSecOps.
-2. Describe an end-to-end threat monitoring architecture for production.
-3. Identify high-value telemetry sources (application, infrastructure, identity, network, and supply chain).
-4. Define actionable detection rules mapped to attacker behavior.
-5. Use meaningful KPIs to evaluate detection and response maturity.
-6. Propose an incremental roadmap for implementing continuous monitoring in a real project.
-
----
-
-## Problem Statement
-
-Teams often deploy fast but monitor weakly. Common gaps include:
-
-- Logs exist but are not normalized or correlated.
-- Alerts are noisy and not tied to business risk.
-- There is no clear ownership for triage and response.
-- Security findings from production do not feed back into development.
-
-Result: **high dwell time, delayed containment, and repeated incidents.**
-
----
-
-## DevSecOps Monitoring Architecture (Reference)
+## DevSecOps Pipeline
 
 ```mermaid
 flowchart LR
-	A[Code + IaC + Dependencies] --> B[CI Security Gates\nSAST/SCA/Secrets]
-	B --> C[Build + Sign + SBOM]
-	C --> D[CD + Policy Enforcement]
-	D --> E[Production Workloads\nApps + APIs + Containers + Cloud]
-
-	E --> F[Telemetry Collection\nLogs Metrics Traces Events]
-	F --> G[Security Data Platform\nSIEM + Data Lake + Correlation]
-	G --> H[Detection Engine\nRules + Anomaly + Threat Intel]
-	H --> I[Alert Triage + SOAR Playbooks]
-	I --> J[Incident Response\nContainment Eradication Recovery]
-	J --> K[Post-Incident Review + Backlog]
-	K --> A
+	A[Code Commit] --> B[SAST CodeQL + Semgrep]
+	B --> C[SCA npm audit + Snyk]
+	C --> D[Secrets Detection GitLeaks + TruffleHog]
+	D --> E[Build and Container Scan Trivy]
+	E --> F[DAST OWASP ZAP]
+	F --> G[Deploy]
+	G --> H[Monitor Falco + Prometheus + Loki + Grafana]
 ```
 
-### Key Principle
+## Repository Map
 
-Security in DevSecOps is a **closed loop**:
+- `architectures/unsecure`: attack surface baseline with vulnerability register and STRIDE model.
+- `architectures/secure`: remediated architecture, controls matrix, and verification guidance.
+- `monitoring`: Falco, Prometheus, Grafana, Loki, and Promtail deployment/configuration.
+- `dast`: OWASP ZAP baseline/full scan configuration and report parser.
+- `sast`, `sca`, `secrets-detection`: static and supply-chain security controls.
+- `tests`: formal plan, penetration scripts, and evidence placeholders.
+- `docs`: IEEE paper and final presentation outlines, plus SPTI mapping.
 
-- Build secure software.
-- Monitor runtime behavior.
-- Detect attacks quickly.
-- Respond and recover.
-- Feed lessons learned back into engineering.
+## Quick Start
 
----
+```bash
+git clone https://github.com/AnderssonProgramming/devsecops-threat-monitor
+cd devsecops-threat-monitor/monitoring
+docker compose up -d
+```
 
-## Threat Scenarios To Cover In Seminar
+Before startup, ensure the Docker network exists:
 
-1. Credential abuse on CI/CD or cloud console accounts.
-2. API abuse (token replay, brute force, unusual request patterns).
-3. Container compromise (unexpected process execution, reverse shell behavior).
-4. Dependency/supply-chain compromise (malicious package update behavior).
-5. Data exfiltration via unusual outbound traffic.
-6. Privilege escalation in cloud IAM or Kubernetes RBAC.
+```bash
+docker network create logiflow-security-net
+```
 
-For each scenario, include:
+## Demo
 
-- Attack path
-- Required telemetry
-- Detection logic
-- Response action
-- Preventive hardening recommendations
+### 1) Authentication bypass checks
 
----
+```bash
+bash tests/penetration/auth-bypass-tests.sh
+node tests/penetration/socket-injection-tests.js
+```
 
-## Detection Engineering Workflow
+### 2) Webhook DoS / rate-limit validation
 
-1. Define the threat hypothesis (what attacker behavior to detect).
-2. Map telemetry fields and event sources.
-3. Build a draft detection rule (high signal, low noise).
-4. Test with safe simulations (atomic techniques, controlled lab events).
-5. Tune thresholds and reduce false positives.
-6. Add runbook context (severity, owner, response steps).
-7. Measure detection quality and iterate.
+```bash
+bash tests/penetration/rate-limit-tests.sh
+```
 
----
+### 3) DAST scan and report gating
 
-## Minimum Telemetry Baseline
+```bash
+bash dast/scripts/run-dast.sh
+node dast/scripts/parse-zap-report.js
+```
 
-- **Identity and access**: login success/failure, MFA events, privilege changes.
-- **Application layer**: authentication events, authorization failures, sensitive endpoint access.
-- **Infrastructure**: host/container process events, file changes in critical paths.
-- **Network**: egress anomalies, uncommon destinations, DNS anomalies.
-- **Pipeline security**: build provenance, signature verification, artifact promotion events.
-- **Cloud control plane**: policy changes, security group changes, key/secret access.
+### 4) SCA across all backend services
 
----
+```bash
+bash sca/audit-all.sh
+```
 
-## KPIs for Continuous Monitoring
+### 5) Runtime anomaly detection (Falco)
 
-- **MTTD** (Mean Time to Detect)
-- **MTTR** (Mean Time to Respond/Recover)
-- Alert precision and false-positive rate
-- Coverage by threat scenario (detection matrix)
-- % critical services with complete telemetry baseline
-- % alerts with documented runbooks
-- Incident recurrence rate (same root cause)
+Trigger suspicious process behavior inside a target container and verify alerts in Grafana (http://localhost:3030) and Loki.
 
----
+## Architecture Comparison
 
-## 30-60-90 Day Implementation Roadmap
+- Unsecure architecture: [architectures/unsecure](architectures/unsecure/README.md)
+- Secure architecture: [architectures/secure](architectures/secure/README.md)
+- Threat model (STRIDE): [architectures/unsecure/threat-model.md](architectures/unsecure/threat-model.md)
+- Controls matrix (NIST CSF): [architectures/secure/controls-matrix.md](architectures/secure/controls-matrix.md)
 
-### Days 1-30: Foundations
+## Deliverables
 
-- Define crown jewels and threat scenarios.
-- Standardize logging schema and retention.
-- Enable baseline detections for identity, IAM changes, and critical APIs.
-- Assign on-call ownership and escalation paths.
+- [x] April 6 - Security test plan and evaluation criteria
+- [x] April 6 - Presentation outline and demo-ready scripts
+- [x] April 8 - IEEE paper outline
+- [x] April 11 - Final integrated DevSecOps monitoring package
 
-### Days 31-60: Detection Quality
+## Evidence and Reporting
 
-- Correlate multi-source events.
-- Add detection tuning workflow and quality metrics.
-- Create incident playbooks for top threats.
-- Start periodic attack simulations.
-
-### Days 61-90: Continuous Improvement
-
-- Integrate post-incident findings into backlog.
-- Expand coverage to supply chain and data exfiltration.
-- Automate triage/containment for low-risk repetitive alerts.
-- Publish monthly security observability scorecard.
-
----
-
-## Suggested Tooling Stack (Technology-Agnostic)
-
-- CI/CD security: GitHub Advanced Security, GitLab Security, or equivalent
-- SIEM/analytics: Microsoft Sentinel, Splunk, Elastic, or Chronicle
-- Runtime detection: Falco, cloud-native threat detection, EDR/XDR signals
-- SOAR/orchestration: native SIEM playbooks or external automation
-- Visualization: operational security dashboards for engineering + SOC
-
-The strategy is more important than any specific vendor.
-
----
-
-## Presentation Deliverables In This Repository
-
-- A complete seminar narrative and conceptual framework (this README)
-- A presentation script with timing and speaking points: `docs/seminar-script.md`
-- An operational runbook for production detection and response: `docs/production-monitoring-runbook.md`
-
----
-
-## Team
-
-- Andersson David Sanchez Mendez
-- Cristian Santiago Pedraza Rodriguez
-- Jeisson David Sanchez Gomez
-
----
-
-## Academic Context
-
-- Course: Seguridad y Privacidad de TI (SPTI)
-- Professor: Javier Ivan Toquica Barrera
-- Institution: Escuela Colombiana de Ingenieria Julio Garavito
-
----
-
-## References
-
-1. NIST. (2018). *Framework for Improving Critical Infrastructure Cybersecurity (Version 1.1).* https://www.nist.gov/cyberframework
-2. NIST. (2012). *Computer Security Incident Handling Guide (SP 800-61 Rev. 2).* https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final
-3. CISA. (2023). *Best Practices for Event Logging and Threat Detection.* https://www.cisa.gov/resources-tools/resources/best-practices-event-logging-and-threat-detection
-4. OWASP Foundation. (2023). *OWASP Top 10:2021.* https://owasp.org/www-project-top-ten/
-5. MITRE. (n.d.). *ATT&CK Knowledge Base.* https://attack.mitre.org/
-6. Google Cloud. (2020). *BeyondProd: A New Approach to Cloud and Endpoint Security.* https://cloud.google.com/beyondprod
-7. CNCF TAG Security. (2022). *Cloud Native Security Whitepaper.* https://github.com/cncf/tag-security/tree/main/community/whitepaper
-8. OpenTelemetry. (n.d.). *OpenTelemetry Documentation.* https://opentelemetry.io/docs/
-9. SRE Books. (2016). *Site Reliability Engineering: How Google Runs Production Systems.* https://sre.google/books/
-10. ISO/IEC. (2022). *ISO/IEC 27001 Information Security Management Systems.* https://www.iso.org/isoiec-27001-information-security.html
-
----
+- Store DAST reports in `dast/reports`.
+- Store test logs/screenshots in `tests/results`.
+- Use GitHub Actions artifacts for pipeline evidence in the final presentation.
 
 ## License
 
-This project is distributed under the terms of the license provided in `LICENSE`.
+MIT License. See [LICENSE](LICENSE).
