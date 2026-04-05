@@ -1,0 +1,48 @@
+- macro: logiflow_container
+  condition: (container and container.name contains "logiflow")
+
+- macro: logiflow_web_containers
+  condition: (container.name contains "logiflow-realtime" or container.name contains "logiflow-automation" or container.name contains "logiflow-gateway")
+
+- rule: LogiFlow Unauthorized Socket Connection Attempt
+  desc: Detect suspicious non-node process activity that may indicate unauthorized access attempts around realtime service handling
+  condition: >
+    spawned_process and
+    container and
+    container.name contains "logiflow-realtime" and
+    not proc.name in (node, nodejs, sh, bash)
+  output: "Unauthorized connection attempt on realtime service (container=%container.name proc=%proc.name user=%user.name command=%proc.cmdline)"
+  priority: WARNING
+  tags: [logiflow, network, authentication]
+
+- rule: LogiFlow Webhook Flood Detected
+  desc: Detect repeated short-lived network tools spawned inside automation container as DoS indicator
+  condition: >
+    spawned_process and
+    container and
+    container.name contains "logiflow-automation" and
+    proc.name in (ab, hey, wrk, siege, k6, curl)
+  output: "Potential DoS flood on webhook (container=%container.name proc=%proc.name command=%proc.cmdline)"
+  priority: CRITICAL
+  tags: [logiflow, dos, webhook]
+
+- rule: LogiFlow Sensitive File Access
+  desc: Detect access to env and credential files inside LogiFlow containers
+  condition: >
+    open_read and
+    logiflow_container and
+    (fd.name endswith ".env" or fd.name contains "secret" or fd.name contains "credential")
+  output: "Sensitive file accessed in container (container=%container.name file=%fd.name proc=%proc.name user=%user.name)"
+  priority: CRITICAL
+  tags: [logiflow, secrets, data-protection]
+
+- rule: LogiFlow Unexpected Outbound Connection
+  desc: Detect unexpected external connections from optimizer container
+  condition: >
+    outbound and
+    container and
+    container.name contains "logiflow-optimizer" and
+    not (fd.sip = "127.0.0.1" or fd.sip startswith "10." or fd.sip startswith "172." or fd.sip startswith "192.168.")
+  output: "Unexpected external connection from optimizer (container=%container.name dest=%fd.sip:%fd.sport proc=%proc.name)"
+  priority: HIGH
+  tags: [logiflow, network, optimizer]
