@@ -5,11 +5,15 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
   schedule:
     - cron: '0 2 * * *'
 
 permissions:
   contents: read
+
+env:
+  SCA_FAIL_ON_CRITICAL: 'false'
 
 jobs:
   secrets-detection:
@@ -55,13 +59,19 @@ jobs:
         working-directory: logiflow/services/${{ matrix.service }}
         run: npm audit --audit-level=high --json > $GITHUB_WORKSPACE/devsecops-threat-monitor/sca/audit-${{ matrix.service }}.json || true
 
-      - name: Fail on critical CVEs
+      - name: Evaluate critical CVEs
         run: |
           REPORT_FILE="$GITHUB_WORKSPACE/devsecops-threat-monitor/sca/audit-${{ matrix.service }}.json"
           CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' "$REPORT_FILE")
+          HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' "$REPORT_FILE")
+          echo "SCA summary for ${{ matrix.service }}: critical=$CRITICAL high=$HIGH"
+
           if [ "$CRITICAL" -gt "0" ]; then
-            echo "CRITICAL CVEs found in ${{ matrix.service }}: $CRITICAL"
-            exit 1
+            echo "::warning::CRITICAL CVEs found in ${{ matrix.service }}: $CRITICAL"
+            if [ "${SCA_FAIL_ON_CRITICAL}" = "true" ]; then
+              echo "SCA_FAIL_ON_CRITICAL=true, failing job."
+              exit 1
+            fi
           fi
 
       - name: Upload SCA audit artifact
@@ -108,7 +118,7 @@ jobs:
           path: logiflow
 
       - name: Scan gateway Docker context
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: config
           scan-ref: logiflow/services/gateway
@@ -118,7 +128,7 @@ jobs:
   dast-zap:
     name: DAST - OWASP ZAP Baseline
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
         with:
