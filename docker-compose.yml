@@ -1,0 +1,32 @@
+services:
+  falco:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: falco
+
+  prometheus:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: prometheus
+
+  grafana:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: grafana
+
+  loki:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: loki
+
+  promtail:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: promtail
+
+networks:
+  logiflow-security-net:
+    external: true
+
+volumes:
+  grafana_data:
