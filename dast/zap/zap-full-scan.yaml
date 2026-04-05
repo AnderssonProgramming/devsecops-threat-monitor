@@ -1,0 +1,57 @@
+# ZAP full active scan policy for controlled environments only
+
+env:
+  contexts:
+    - name: LogiFlowFullScan
+      urls:
+        - ${LOGIFLOW_GATEWAY_URL}
+      includePaths:
+        - ${LOGIFLOW_GATEWAY_URL}/api/vehicles.*
+        - ${LOGIFLOW_GATEWAY_URL}/api/stops.*
+        - ${LOGIFLOW_GATEWAY_URL}/api/webhook/traffic-event.*
+        - ${LOGIFLOW_GATEWAY_URL}/graphql.*
+
+jobs:
+  - type: spider
+    parameters:
+      context: LogiFlowFullScan
+      maxDuration: 5
+
+  - type: activeScan
+    parameters:
+      context: LogiFlowFullScan
+      maxRuleDurationInMins: 5
+      maxScanDurationInMins: 15
+      policy: Default Policy
+    policyDefinition:
+      rules:
+        - id: 40018
+          name: SQL Injection
+          threshold: Medium
+          strength: High
+        - id: 40012
+          name: Cross Site Scripting (Reflected)
+          threshold: Medium
+          strength: High
+        - id: 6
+          name: Path Traversal
+          threshold: Medium
+          strength: High
+        - id: 10111
+          name: Authentication Request Identified
+          threshold: Low
+          strength: Medium
+        - id: 10016
+          name: Web Browser XSS Protection Not Enabled
+          threshold: Low
+          strength: Medium
+        - id: 10035
+          name: Strict-Transport-Security Header Not Set
+          threshold: Low
+          strength: Medium
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk
+      reportFile: zap-full-scan-report

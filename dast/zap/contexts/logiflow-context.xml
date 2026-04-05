@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<context>
+  <name>LogiFlowContext</name>
+  <desc>Security assessment context for LogiFlow API and websocket surfaces</desc>
+  <inscope>https?://.*/api/vehicles.*</inscope>
+  <inscope>https?://.*/api/stops.*</inscope>
+  <inscope>https?://.*/api/webhook/traffic-event.*</inscope>
+  <inscope>https?://.*/graphql.*</inscope>
+  <inscope>https?://.*/socket\.io/.*</inscope>
+  <outscope>https?://.*/health.*</outscope>
+  <authentication>
+    <method>manual</method>
+  </authentication>
+  <sessionManagement>
+    <method>cookie</method>
+  </sessionManagement>
+  <users/>
+</context>

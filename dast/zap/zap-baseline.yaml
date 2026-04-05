@@ -1,0 +1,68 @@
+# ZAP baseline configuration for LogiFlow
+# Target values are controlled by LOGIFLOW_GATEWAY_URL in execution scripts/CI.
+
+env:
+  contexts:
+    - name: LogiFlowContext
+      urls:
+        - ${LOGIFLOW_GATEWAY_URL}
+      includePaths:
+        - ${LOGIFLOW_GATEWAY_URL}/api/vehicles.*
+        - ${LOGIFLOW_GATEWAY_URL}/api/stops.*
+        - ${LOGIFLOW_GATEWAY_URL}/api/webhook/traffic-event.*
+        - ${LOGIFLOW_GATEWAY_URL}/graphql.*
+      excludePaths:
+        - ${LOGIFLOW_GATEWAY_URL}/health.*
+      authentication:
+        method: manual
+      sessionManagement:
+        method: cookie
+      technology:
+        exclude: []
+  parameters:
+    failOnError: true
+    failOnWarning: false
+
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 20
+
+  - type: spider
+    parameters:
+      context: LogiFlowContext
+      maxDuration: 3
+
+  - type: requestor
+    requests:
+      - name: Vehicles endpoint auth bypass probe
+        method: GET
+        url: ${LOGIFLOW_GATEWAY_URL}/api/vehicles
+      - name: Stops endpoint IDOR probe
+        method: GET
+        url: ${LOGIFLOW_GATEWAY_URL}/api/stops
+      - name: Webhook injection/rate limit probe
+        method: POST
+        url: ${LOGIFLOW_GATEWAY_URL}/api/webhook/traffic-event
+        data: '{"eventType":"road_closure","severity":"CRITICAL","source":"zap"}'
+        headers:
+          Content-Type: application/json
+      - name: GraphQL endpoint probe
+        method: POST
+        url: ${LOGIFLOW_GATEWAY_URL}/graphql
+        data: '{"query":"{ __typename }"}'
+        headers:
+          Content-Type: application/json
+      - name: WebSocket handshake probe
+        method: GET
+        url: ${LOGIFLOW_GATEWAY_URL}/socket.io/?EIO=4&transport=websocket
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/wrk
+      reportFile: zap-baseline-report
