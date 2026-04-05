@@ -1,0 +1,25 @@
+title = "LogiFlow DevSecOps GitLeaks Config"
+
+[allowlist]
+description = "Allow test placeholders and non-secret fixtures"
+paths = [
+  '''tests/results/.*''',
+  '''dast/reports/.*''',
+  '''.*\.gitkeep'''
+]
+
+[[rules]]
+id = "logiflow-jwt-secret"
+description = "Potential JWT secret token"
+regex = '''(?i)jwt(_|-)?secret\s*[=:]\s*["']?[a-z0-9_\-\.]{12,}["']?'''
+secretGroup = 0
+entropy = 3.5
+keywords = ["jwt", "secret"]
+
+[[rules]]
+id = "logiflow-api-key"
+description = "Potential API key or token"
+regex = '''(?i)(anthropic|google|telegram)(_|-)?(api)?(_|-)?(key|token)\s*[=:]\s*["']?[a-z0-9_\-]{16,}["']?'''
+secretGroup = 0
+entropy = 3.0
+keywords = ["api", "key", "token"]

@@ -1,0 +1,43 @@
+rules:
+  - id: logiflow-jwt-secret-hardcoded
+    patterns:
+      - pattern-either:
+          - pattern: const JWT_SECRET = "..."
+          - pattern: process.env.JWT_SECRET || "..."
+    message: "Potential hardcoded JWT fallback secret. Use secure secret management only."
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      cwe: "CWE-798"
+      owasp: "A02:2021"
+
+  - id: logiflow-unsafe-webhook-without-auth
+    patterns:
+      - pattern: app.post('/webhooks/traffic-event', ...)
+      - pattern-not: app.post('/webhooks/traffic-event', bearerAuthMiddleware, ...)
+    message: "Webhook endpoint appears to be missing bearer authentication middleware."
+    severity: WARNING
+    languages: [javascript]
+    metadata:
+      owasp: "A07:2021"
+
+  - id: logiflow-missing-rate-limit
+    patterns:
+      - pattern: app.post('/webhooks/traffic-event', ...)
+      - pattern-not-regex: "rateLimit\\s*\\("
+    message: "Webhook endpoint may be missing express-rate-limit protection."
+    severity: WARNING
+    languages: [javascript]
+    metadata:
+      owasp: "A05:2021"
+
+  - id: logiflow-verbose-error-response
+    patterns:
+      - pattern-either:
+          - pattern: res.status(...).json({ ..., stack: $STACK, ... })
+          - pattern: throw new Error($MESSAGE)
+    message: "Review for verbose error disclosure in production paths."
+    severity: INFO
+    languages: [javascript, typescript]
+    metadata:
+      owasp: "A09:2021"

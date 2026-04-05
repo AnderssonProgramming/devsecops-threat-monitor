@@ -1,0 +1,21 @@
+detectors:
+  - name: Generic API Key
+    enabled: true
+  - name: JWT
+    enabled: true
+  - name: AWS
+    enabled: true
+  - name: GCP
+    enabled: true
+
+filters:
+  include_paths:
+    - "**/*"
+  exclude_paths:
+    - "dast/reports/**"
+    - "tests/results/**"
+    - "**/*.gitkeep"
+
+scan:
+  verify: false
+  fail: true

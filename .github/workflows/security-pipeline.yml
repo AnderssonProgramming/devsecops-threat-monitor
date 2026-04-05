@@ -1,0 +1,172 @@
+name: DevSecOps Security Pipeline - LogiFlow
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  secrets-detection:
+    name: Secrets Detection (GitLeaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: secrets-detection/gitleaks.toml
+
+  sca-audit:
+    name: SCA - Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [gateway, realtime, automation, optimizer]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: devsecops-threat-monitor
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AnderssonProgramming/logiflow-cybersecurity-seminar
+          path: logiflow
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: logiflow/services/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: logiflow/services/${{ matrix.service }}
+        run: npm ci
+
+      - name: npm audit
+        working-directory: logiflow/services/${{ matrix.service }}
+        run: npm audit --audit-level=high --json > $GITHUB_WORKSPACE/devsecops-threat-monitor/sca/audit-${{ matrix.service }}.json || true
+
+      - name: Fail on critical CVEs
+        run: |
+          REPORT_FILE="$GITHUB_WORKSPACE/devsecops-threat-monitor/sca/audit-${{ matrix.service }}.json"
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' "$REPORT_FILE")
+          if [ "$CRITICAL" -gt "0" ]; then
+            echo "CRITICAL CVEs found in ${{ matrix.service }}: $CRITICAL"
+            exit 1
+          fi
+
+      - name: Upload SCA audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sca-audit-${{ matrix.service }}
+          path: devsecops-threat-monitor/sca/audit-${{ matrix.service }}.json
+
+  sast-codeql:
+    name: SAST - CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript,typescript
+          config-file: sast/codeql/codeql-config.yml
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+
+  sast-semgrep:
+    name: SAST - Semgrep Custom Rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: sast/semgrep/semgrep-rules.yml
+
+  container-scan:
+    name: Container Security - Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: devsecops-threat-monitor
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AnderssonProgramming/logiflow-cybersecurity-seminar
+          path: logiflow
+
+      - name: Scan gateway Docker context
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: logiflow/services/gateway
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+  dast-zap:
+    name: DAST - OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: devsecops-threat-monitor
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AnderssonProgramming/logiflow-cybersecurity-seminar
+          path: logiflow
+
+      - name: Start LogiFlow services
+        working-directory: logiflow
+        run: docker compose up -d
+
+      - name: Wait for gateway
+        run: sleep 45
+
+      - name: Run ZAP baseline scan
+        working-directory: devsecops-threat-monitor
+        env:
+          LOGIFLOW_GATEWAY_URL: http://localhost:3000
+        run: bash dast/scripts/run-dast.sh
+
+      - name: Parse and gate on results
+        working-directory: devsecops-threat-monitor
+        run: |
+          REPORT_FILE=$(ls -1t dast/reports/zap-report-*.json | head -n 1)
+          node dast/scripts/parse-zap-report.js "$REPORT_FILE"
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: devsecops-threat-monitor/dast/reports/
+
+  security-summary:
+    name: Security Summary Report
+    needs: [secrets-detection, sca-audit, sast-codeql, sast-semgrep, container-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate security summary
+        run: |
+          echo "## Security Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Secrets Detection | ${{ needs.secrets-detection.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SCA (Dependencies) | ${{ needs.sca-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST (CodeQL) | ${{ needs.sast-codeql.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST (Semgrep) | ${{ needs.sast-semgrep.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Container Scan | ${{ needs.container-scan.result }} |" >> $GITHUB_STEP_SUMMARY

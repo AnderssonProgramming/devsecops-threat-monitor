@@ -1,0 +1,19 @@
+version: v1.0.0
+language-settings:
+  javascript:
+    package-manager: npm
+
+scan:
+  projects:
+    - name: logiflow-gateway
+      path: ../logiflow-cybersecurity-seminar/services/gateway
+    - name: logiflow-realtime
+      path: ../logiflow-cybersecurity-seminar/services/realtime
+    - name: logiflow-automation
+      path: ../logiflow-cybersecurity-seminar/services/automation
+    - name: logiflow-optimizer
+      path: ../logiflow-cybersecurity-seminar/services/optimizer
+
+policy:
+  fail-on-severity: high
+  monitor: true

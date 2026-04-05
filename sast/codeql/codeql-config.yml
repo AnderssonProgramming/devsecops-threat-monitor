@@ -1,0 +1,16 @@
+name: "LogiFlow DevSecOps CodeQL Configuration"
+
+paths:
+  - dast
+  - tests
+  - monitoring
+  - secrets-detection
+  - sca
+
+paths-ignore:
+  - '**/*.md'
+  - '**/reports/**'
+  - '**/*.json'
+
+queries:
+  - uses: security-and-quality
