@@ -1,0 +1,84 @@
+{
+  "title": "LogiFlow Security Dashboard",
+  "uid": "logiflow-security",
+  "version": 1,
+  "schemaVersion": 39,
+  "refresh": "15s",
+  "tags": ["logiflow", "security", "devsecops"],
+  "time": {"from": "now-6h", "to": "now"},
+  "links": [
+    {
+      "title": "Security Pipeline Status",
+      "type": "link",
+      "url": "https://github.com/AnderssonProgramming/devsecops-threat-monitor/actions"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Auth Failures Over Time",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "rate(logiflow_auth_failures_total[5m])", "legendFormat": "auth failures/sec"}],
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+    },
+    {
+      "id": 2,
+      "type": "gauge",
+      "title": "Active Socket Connections by Role",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum(logiflow_socket_connections{role=~\"admin|conductor|unauthorized\"})"}],
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 8}
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Webhook Request Rate",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "rate(logiflow_webhook_requests_total[1m]) * 60", "legendFormat": "req/min"}],
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 8}
+    },
+    {
+      "id": 4,
+      "type": "logs",
+      "title": "Falco Alerts Feed",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "targets": [{"refId": "A", "expr": "{container=~\".*falco.*\"}"}],
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Top 5 Attacker IPs",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "targets": [{"refId": "A", "expr": "topk(5, sum by (remote_addr) (count_over_time({service=~\"gateway|realtime|automation\"} | json | remote_addr=~\".+\" [5m])))"}],
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
+    },
+    {
+      "id": 6,
+      "type": "piechart",
+      "title": "Container Anomalies",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "targets": [{"refId": "A", "expr": "sum by (rule) (count_over_time({container=~\".*falco.*\"} | json | rule=~\".+\" [30m]))"}],
+      "gridPos": {"x": 0, "y": 16, "w": 8, "h": 8}
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Dependency CVE Summary",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "logiflow_dependency_cve_total"}],
+      "gridPos": {"x": 8, "y": 16, "w": 8, "h": 8}
+    },
+    {
+      "id": 8,
+      "type": "text",
+      "title": "Security Pipeline Status",
+      "options": {
+        "mode": "markdown",
+        "content": "[Open GitHub Actions](https://github.com/AnderssonProgramming/devsecops-threat-monitor/actions)"
+      },
+      "gridPos": {"x": 16, "y": 16, "w": 8, "h": 8}
+    }
+  ]
+}
