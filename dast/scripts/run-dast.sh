@@ -6,6 +6,7 @@ readonly ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:stable"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPORTS_DIR="${SCRIPT_DIR}/../reports"
 readonly TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+readonly ZAP_RUN_USER="${ZAP_RUN_USER:-root}"
 
 function resolve_docker_command() {
   if command -v docker >/dev/null 2>&1; then
@@ -50,6 +51,7 @@ fi
 REPORTS_MOUNT_PATH="$(convert_path_if_needed "${REPORTS_DIR}" "${DOCKER_CMD}")"
 
 "${DOCKER_CMD}" run --rm \
+  --user "${ZAP_RUN_USER}" \
   --network host \
   -v "${REPORTS_MOUNT_PATH}:/zap/wrk:rw" \
   "${ZAP_IMAGE}" \
@@ -58,6 +60,7 @@ REPORTS_MOUNT_PATH="$(convert_path_if_needed "${REPORTS_DIR}" "${DOCKER_CMD}")"
     -r "zap-report-${TIMESTAMP}.html" \
     -J "zap-report-${TIMESTAMP}.json" \
     -l WARN \
+    -I \
     --auto
 
 echo "[ZAP] Report saved to ${REPORTS_DIR}/zap-report-${TIMESTAMP}.html"
