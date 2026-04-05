@@ -5,7 +5,6 @@ readonly LOGIFLOW_GATEWAY_URL="${LOGIFLOW_GATEWAY_URL:-http://localhost:3000}"
 readonly ZAP_IMAGE="ghcr.io/zaproxy/zaproxy:stable"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPORTS_DIR="${SCRIPT_DIR}/../reports"
-readonly ZAP_CONFIG_DIR="${SCRIPT_DIR}/../zap"
 readonly TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 
 function resolve_docker_command() {
@@ -49,16 +48,13 @@ if [ -z "${DOCKER_CMD}" ]; then
 fi
 
 REPORTS_MOUNT_PATH="$(convert_path_if_needed "${REPORTS_DIR}" "${DOCKER_CMD}")"
-ZAP_CONFIG_MOUNT_PATH="$(convert_path_if_needed "${ZAP_CONFIG_DIR}" "${DOCKER_CMD}")"
 
 "${DOCKER_CMD}" run --rm \
   --network host \
   -v "${REPORTS_MOUNT_PATH}:/zap/wrk:rw" \
-  -v "${ZAP_CONFIG_MOUNT_PATH}:/zap/config:ro" \
   "${ZAP_IMAGE}" \
   zap-baseline.py \
     -t "${LOGIFLOW_GATEWAY_URL}" \
-    -c /zap/config/zap-baseline.yaml \
     -r "zap-report-${TIMESTAMP}.html" \
     -J "zap-report-${TIMESTAMP}.json" \
     -l WARN \

@@ -1,5 +1,8 @@
-# ZAP baseline configuration for LogiFlow
-# Target values are controlled by LOGIFLOW_GATEWAY_URL in execution scripts/CI.
+# ZAP Automation Framework baseline definition for LogiFlow.
+# NOTE: `zap-baseline.py` does not accept this YAML file via `-c`.
+# It expects a traditional tab-separated config file. The baseline runner
+# (`dast/scripts/run-dast.sh`) invokes `zap-baseline.py` directly without `-c`.
+# Keep this file for future Automation Framework runs (for example `zap.sh -cmd -autorun`).
 
 env:
   contexts:
