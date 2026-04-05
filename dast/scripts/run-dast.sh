@@ -8,14 +8,53 @@ readonly REPORTS_DIR="${SCRIPT_DIR}/../reports"
 readonly ZAP_CONFIG_DIR="${SCRIPT_DIR}/../zap"
 readonly TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 
+function resolve_docker_command() {
+  if command -v docker >/dev/null 2>&1; then
+    if docker version >/dev/null 2>&1; then
+      echo "docker"
+      return 0
+    fi
+  fi
+
+  if command -v docker.exe >/dev/null 2>&1; then
+    if docker.exe version >/dev/null 2>&1; then
+      echo "docker.exe"
+      return 0
+    fi
+  fi
+
+  echo ""
+}
+
+function convert_path_if_needed() {
+  local input_path="$1"
+  local docker_cmd="$2"
+
+  if [ "${docker_cmd}" = "docker.exe" ] && command -v wslpath >/dev/null 2>&1; then
+    wslpath -m "${input_path}"
+    return 0
+  fi
+
+  echo "${input_path}"
+}
+
 mkdir -p "${REPORTS_DIR}"
 
 echo "[ZAP] Starting baseline scan against ${LOGIFLOW_GATEWAY_URL}"
 
-docker run --rm \
+DOCKER_CMD="$(resolve_docker_command)"
+if [ -z "${DOCKER_CMD}" ]; then
+  echo "[ZAP] ERROR: Docker command not found. Install Docker Desktop and ensure CLI is available."
+  exit 1
+fi
+
+REPORTS_MOUNT_PATH="$(convert_path_if_needed "${REPORTS_DIR}" "${DOCKER_CMD}")"
+ZAP_CONFIG_MOUNT_PATH="$(convert_path_if_needed "${ZAP_CONFIG_DIR}" "${DOCKER_CMD}")"
+
+"${DOCKER_CMD}" run --rm \
   --network host \
-  -v "${REPORTS_DIR}:/zap/wrk:rw" \
-  -v "${ZAP_CONFIG_DIR}:/zap/config:ro" \
+  -v "${REPORTS_MOUNT_PATH}:/zap/wrk:rw" \
+  -v "${ZAP_CONFIG_MOUNT_PATH}:/zap/config:ro" \
   "${ZAP_IMAGE}" \
   zap-baseline.py \
     -t "${LOGIFLOW_GATEWAY_URL}" \

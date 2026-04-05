@@ -1,4 +1,14 @@
-const { io } = require('socket.io-client');
+let io;
+
+function loadSocketIoClient() {
+  try {
+    ({ io } = require('socket.io-client'));
+  } catch {
+    console.error('Missing dependency: socket.io-client');
+    console.error('Run `npm install` in repository root to execute this test.');
+    process.exit(1);
+  }
+}
 
 const REALTIME_URL = process.env.REALTIME_URL ?? 'http://localhost:3001';
 const TEST_VEHICLE_ID = 'v-001';
@@ -43,6 +53,7 @@ function testUnauthorizedRoomJoin() {
 }
 
 async function main() {
+  loadSocketIoClient();
   const passed = await testUnauthorizedRoomJoin();
   process.exit(passed ? 0 : 1);
 }

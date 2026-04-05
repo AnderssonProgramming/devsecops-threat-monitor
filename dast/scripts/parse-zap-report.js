@@ -85,7 +85,15 @@ function countHighRisk(groupedAlerts) {
 
 function main() {
   const reportsDir = path.resolve(__dirname, '../reports');
-  const reportPath = parseArguments(process.argv) || findLatestZapReport(reportsDir);
+  let reportPath;
+
+  try {
+    reportPath = parseArguments(process.argv) || findLatestZapReport(reportsDir);
+  } catch (error) {
+    console.error(`[ZAP] ${error.message}`);
+    console.error('[ZAP] Run `bash dast/scripts/run-dast.sh` first, then re-run this parser.');
+    process.exit(2);
+  }
 
   const reportRaw = fs.readFileSync(reportPath, 'utf8');
   const reportJson = JSON.parse(reportRaw);

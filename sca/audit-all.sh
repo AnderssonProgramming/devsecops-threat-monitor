@@ -6,6 +6,21 @@ readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly LOGIFLOW_ROOT="${LOGIFLOW_ROOT:-${PROJECT_ROOT}/../logiflow-cybersecurity-seminar}"
 readonly SERVICES=(gateway realtime automation optimizer)
 
+function extract_vulnerability_count() {
+  local report_file="$1"
+  local level="$2"
+
+  node -e "
+    const fs = require('fs');
+    const filePath = process.argv[1];
+    const level = process.argv[2];
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const json = JSON.parse(raw);
+    const value = json?.metadata?.vulnerabilities?.[level] ?? 0;
+    process.stdout.write(String(value));
+  " "${report_file}" "${level}"
+}
+
 if [ ! -d "${LOGIFLOW_ROOT}/services" ]; then
   echo "[ERROR] LogiFlow services directory not found: ${LOGIFLOW_ROOT}/services"
   echo "Set LOGIFLOW_ROOT to your LogiFlow repository path."
@@ -22,8 +37,8 @@ for service in "${SERVICES[@]}"; do
   npm audit --audit-level=high --json > "${OUTPUT_FILE}" || true
   popd > /dev/null
 
-  CRITICAL_COUNT=$(jq -r '.metadata.vulnerabilities.critical // 0' "${OUTPUT_FILE}")
-  HIGH_COUNT=$(jq -r '.metadata.vulnerabilities.high // 0' "${OUTPUT_FILE}")
+  CRITICAL_COUNT="$(extract_vulnerability_count "${OUTPUT_FILE}" "critical")"
+  HIGH_COUNT="$(extract_vulnerability_count "${OUTPUT_FILE}" "high")"
   echo "[SCA] ${service}: critical=${CRITICAL_COUNT}, high=${HIGH_COUNT}"
 done
 

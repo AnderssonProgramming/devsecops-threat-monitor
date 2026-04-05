@@ -1,0 +1,14 @@
+{
+  "name": "devsecops-threat-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DevSecOps security monitoring layer for LogiFlow",
+  "scripts": {
+    "test:socket": "node tests/penetration/socket-injection-tests.js",
+    "dast:run": "bash dast/scripts/run-dast.sh",
+    "dast:parse": "node dast/scripts/parse-zap-report.js"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}

@@ -3,6 +3,7 @@ set -euo pipefail
 
 readonly GATEWAY_URL="${GATEWAY_URL:-http://localhost:3000}"
 readonly WEBHOOK_URL="${WEBHOOK_URL:-http://localhost:3002/webhooks/traffic-event}"
+readonly CURL_TIMEOUT_SECONDS="${CURL_TIMEOUT_SECONDS:-10}"
 
 function assert_status_code() {
   local actual_status="$1"
@@ -21,21 +22,21 @@ function assert_status_code() {
 function test_protected_route_without_token() {
   echo "[TEST] Accessing protected route without token..."
   local response
-  response="$(curl -s -o /dev/null -w "%{http_code}" "${GATEWAY_URL}/api/vehicles")"
+  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" "${GATEWAY_URL}/api/vehicles")"
   assert_status_code "${response}" "401" "Returned 401 Unauthorized" "Protected route accepted request without token"
 }
 
 function test_protected_route_with_invalid_token() {
   echo "[TEST] Accessing protected route with invalid token..."
   local response
-  response="$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer invalid.token.here" "${GATEWAY_URL}/api/vehicles")"
+  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" -H "Authorization: Bearer invalid.token.here" "${GATEWAY_URL}/api/vehicles")"
   assert_status_code "${response}" "401" "Invalid token rejected" "Invalid token was not rejected"
 }
 
 function test_webhook_without_bearer_token() {
   echo "[TEST] Calling webhook endpoint without bearer token..."
   local response
-  response="$(curl -s -o /dev/null -w "%{http_code}" -X POST "${WEBHOOK_URL}" -H "Content-Type: application/json" -d '{"eventType":"road_closure","severity":"CRITICAL"}')"
+  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" -X POST "${WEBHOOK_URL}" -H "Content-Type: application/json" -d '{"eventType":"road_closure","severity":"CRITICAL"}')"
   assert_status_code "${response}" "401" "Webhook rejected unauthenticated request" "Webhook accepted request without bearer token"
 }
 

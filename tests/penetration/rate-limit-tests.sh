@@ -4,9 +4,10 @@ set -euo pipefail
 readonly WEBHOOK_URL="${WEBHOOK_URL:-http://localhost:3002/webhooks/traffic-event}"
 readonly BEARER_TOKEN="${WEBHOOK_BEARER_TOKEN:-test-token}"
 readonly REQUESTS="${REQUESTS:-50}"
+readonly CURL_TIMEOUT_SECONDS="${CURL_TIMEOUT_SECONDS:-10}"
 
 function send_request() {
-  curl -s -o /dev/null -w "%{http_code}" \
+  curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" \
     -X POST "${WEBHOOK_URL}" \
     -H "Authorization: Bearer ${BEARER_TOKEN}" \
     -H "Content-Type: application/json" \
