@@ -1,0 +1,38 @@
+groups:
+  - name: logiflow_security
+    rules:
+      - alert: HighFailedAuthRate
+        expr: rate(logiflow_auth_failures_total[5m]) > 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High authentication failure rate - possible brute force"
+          description: "{{ $value }} failures/sec in the last 5 minutes"
+
+      - alert: WebhookRateLimitTriggered
+        expr: rate(logiflow_webhook_rate_limited_total[1m]) > 5
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Webhook rate limit triggered - possible DoS"
+          description: "Rate-limited webhook requests detected above expected baseline"
+
+      - alert: UnauthorizedSocketAttempts
+        expr: rate(logiflow_socket_unauthorized_total[2m]) > 1
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unauthorized Socket.io connection attempts detected"
+          description: "Socket authentication failures are rising"
+
+      - alert: FalcoCriticalAlerts
+        expr: rate(logiflow_falco_alerts_total{priority="critical"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical Falco runtime alerts detected"
+          description: "Runtime anomaly events require immediate triage"

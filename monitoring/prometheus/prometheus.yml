@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alert-rules.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: logiflow-gateway
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["logiflow-gateway:3000"]
+
+  - job_name: logiflow-realtime
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["logiflow-realtime:3001"]
+
+  - job_name: logiflow-automation
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["logiflow-automation:3002"]
+
+  - job_name: logiflow-optimizer
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["logiflow-optimizer:50051"]
