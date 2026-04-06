@@ -144,12 +144,31 @@ jobs:
         run: docker compose up -d
 
       - name: Wait for gateway
-        run: sleep 45
+        run: |
+          TARGET_URL="http://localhost:3002"
+          ATTEMPTS=30
+          SLEEP_SECONDS=5
+
+          for i in $(seq 1 $ATTEMPTS); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL" || true)
+            if [ "$STATUS" != "000" ]; then
+              echo "Gateway reachable at $TARGET_URL (status=$STATUS)"
+              exit 0
+            fi
+
+            echo "Waiting for gateway... attempt $i/$ATTEMPTS"
+            sleep $SLEEP_SECONDS
+          done
+
+          echo "Gateway did not become reachable at $TARGET_URL"
+          docker ps -a
+          docker compose -f logiflow/docker-compose.yml logs --tail=200 gateway || true
+          exit 1
 
       - name: Run ZAP baseline scan
         working-directory: devsecops-threat-monitor
         env:
-          LOGIFLOW_GATEWAY_URL: http://localhost:3000
+          LOGIFLOW_GATEWAY_URL: http://localhost:3002
         run: bash dast/scripts/run-dast.sh
 
       - name: Parse and gate on results
