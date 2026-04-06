@@ -1,8 +1,8 @@
 - rule: OWASP A01 Privilege Escalation Attempt
   desc: Detect privilege escalation attempts inside LogiFlow containers
   condition: >
-    spawned_process and
-    container and
+    evt.type in (execve, execveat) and
+    container.id != host and
     container.name contains "logiflow" and
     (proc.name in (sudo, su, setcap, chmod, chown) or proc.cmdline contains "--privileged")
   output: "OWASP A01 potential privilege escalation (container=%container.name proc=%proc.name cmd=%proc.cmdline user=%user.name)"
@@ -12,20 +12,20 @@
 - rule: OWASP A02 Plaintext Credential Transmission
   desc: Detect potential plaintext credential movement in process command lines
   condition: >
-    spawned_process and
-    container and
+    evt.type in (execve, execveat) and
+    container.id != host and
     container.name contains "logiflow" and
     (proc.cmdline contains "password=" or proc.cmdline contains "token=" or proc.cmdline contains "apikey=") and
     not proc.cmdline contains "https://"
   output: "OWASP A02 potential plaintext credential transmission (container=%container.name proc=%proc.name cmd=%proc.cmdline)"
-  priority: HIGH
+  priority: ERROR
   tags: [owasp-a02, cryptographic-failures, credentials]
 
 - rule: OWASP A03 Shell Spawned By Web Process
   desc: Detect shell spawning from web-facing Node.js services as potential injection indicator
   condition: >
-    spawned_process and
-    container and
+    evt.type in (execve, execveat) and
+    container.id != host and
     container.name contains "logiflow" and
     proc.pname in (node, nodejs) and
     proc.name in (sh, bash, zsh, dash)
@@ -36,10 +36,10 @@
 - rule: OWASP A09 Log Suppression Attempt
   desc: Detect commands attempting to disable, truncate, or remove logs
   condition: >
-    spawned_process and
-    container and
+    evt.type in (execve, execveat) and
+    container.id != host and
     container.name contains "logiflow" and
     (proc.cmdline contains "truncate" or proc.cmdline contains "/dev/null" or proc.cmdline contains "rm -f" and proc.cmdline contains "log")
   output: "OWASP A09 potential log suppression (container=%container.name proc=%proc.name cmd=%proc.cmdline)"
-  priority: HIGH
+  priority: ERROR
   tags: [owasp-a09, logging, monitoring]

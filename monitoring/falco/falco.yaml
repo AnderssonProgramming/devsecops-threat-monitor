@@ -23,3 +23,6 @@ rules_file:
   - /etc/falco/rules.d
 
 load_plugins: []
+
+engine:
+  kind: modern_ebpf

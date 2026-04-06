@@ -15,7 +15,8 @@ const TEST_VEHICLE_ID = 'v-001';
 const CONNECTION_TIMEOUT_MS = 2000;
 
 function handleConnectionError(error, socket, resolve) {
-  if (error.message.includes('Authentication')) {
+  const message = String(error.message || '');
+  if (message.includes('Authentication') || message.includes('Unauthorized')) {
     console.log('  PASS: Connection rejected without JWT');
     socket.close();
     resolve(true);

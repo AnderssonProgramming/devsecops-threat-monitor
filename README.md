@@ -17,13 +17,13 @@ This repository implements a complete DevSecOps security monitoring layer for th
 
 ```mermaid
 flowchart LR
-	A[Code Commit] --> B[SAST CodeQL + Semgrep]
-	B --> C[SCA npm audit + Snyk]
-	C --> D[Secrets Detection GitLeaks + TruffleHog]
-	D --> E[Build and Container Scan Trivy]
-	E --> F[DAST OWASP ZAP]
-	F --> G[Deploy]
-	G --> H[Monitor Falco + Prometheus + Loki + Grafana]
+  A[Code Commit] --> B[SAST CodeQL + Semgrep]
+  B --> C[SCA npm audit + Snyk]
+  C --> D[Secrets Detection GitLeaks + TruffleHog]
+  D --> E[Build and Container Scan Trivy]
+  E --> F[DAST OWASP ZAP]
+  F --> G[Deploy]
+  G --> H[Monitor Falco + Prometheus + Loki + Grafana]
 ```
 
 ## Repository Map
@@ -52,6 +52,14 @@ docker network create logiflow-security-net
 
 ## Demo
 
+Before running the demo scripts, make sure LogiFlow application services are running:
+
+```bash
+cd ../logiflow-cybersecurity-seminar
+docker compose up -d
+cd ../devsecops-threat-monitor
+```
+
 ### 1) Authentication bypass checks
 
 ```bash
@@ -68,6 +76,7 @@ bash tests/penetration/rate-limit-tests.sh
 ### 3) DAST scan and report gating
 
 ```bash
+export LOGIFLOW_GATEWAY_URL=http://localhost:3002/api/v1/health
 bash dast/scripts/run-dast.sh
 node dast/scripts/parse-zap-report.js
 ```
@@ -80,7 +89,43 @@ bash sca/audit-all.sh
 
 ### 5) Runtime anomaly detection (Falco)
 
-Trigger suspicious process behavior inside a target container and verify alerts in Grafana (http://localhost:3030) and Loki.
+Trigger suspicious process behavior inside a target container and verify alerts in Grafana (<http://localhost:3030>) and Loki.
+
+## Monitoring Validation Guide
+
+### Prometheus (<http://localhost:9090>)
+
+Use these starter queries in the Prometheus expression box:
+
+- `up`
+- `up{job="logiflow-gateway"}`
+- `up{job="logiflow-realtime"}`
+- `rate(logiflow_auth_failures_total[5m])`
+
+If `up` returns 1 for your jobs, scraping is healthy.
+
+### Grafana (<http://localhost:3030>)
+
+- Login with:
+  - Username: `admin`
+  - Password: value from `GRAFANA_ADMIN_PASSWORD`
+- Go to Dashboards -> LogiFlow Security.
+- Verify panels load data and alert feeds.
+
+### Loki (<http://localhost:3100>)
+
+`/` returns 404 by design. Use API endpoints to verify health:
+
+- `http://localhost:3100/ready`
+- `http://localhost:3100/loki/api/v1/labels`
+
+### Quick Demo Storyboard (Video)
+
+1. Show monitoring stack up (`docker ps` with grafana/prometheus/loki/promtail/falco).
+2. Show LogiFlow stack up (`docker compose ps` in logiflow repo).
+3. Run TC-01, TC-02, TC-03 scripts and explain PASS/FAIL meaning.
+4. Run ZAP baseline + parser and show report files in `dast/reports`.
+5. Open Grafana dashboard and correlate with one test execution.
 
 ## Architecture Comparison
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly GATEWAY_URL="${GATEWAY_URL:-http://localhost:3000}"
-readonly WEBHOOK_URL="${WEBHOOK_URL:-http://localhost:3002/webhooks/traffic-event}"
+readonly GATEWAY_URL="${GATEWAY_URL:-http://localhost:3002}"
+readonly API_PREFIX="${API_PREFIX:-/api/v1}"
+readonly WEBHOOK_URL="${WEBHOOK_URL:-${GATEWAY_URL}${API_PREFIX}/webhook}"
 readonly CURL_TIMEOUT_SECONDS="${CURL_TIMEOUT_SECONDS:-10}"
 
 function assert_status_code() {
@@ -22,14 +23,14 @@ function assert_status_code() {
 function test_protected_route_without_token() {
   echo "[TEST] Accessing protected route without token..."
   local response
-  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" "${GATEWAY_URL}/api/vehicles")"
+  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" "${GATEWAY_URL}${API_PREFIX}/vehicles")"
   assert_status_code "${response}" "401" "Returned 401 Unauthorized" "Protected route accepted request without token"
 }
 
 function test_protected_route_with_invalid_token() {
   echo "[TEST] Accessing protected route with invalid token..."
   local response
-  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" -H "Authorization: Bearer invalid.token.here" "${GATEWAY_URL}/api/vehicles")"
+  response="$(curl -s --max-time "${CURL_TIMEOUT_SECONDS}" -o /dev/null -w "%{http_code}" -H "Authorization: Bearer invalid.token.here" "${GATEWAY_URL}${API_PREFIX}/vehicles")"
   assert_status_code "${response}" "401" "Invalid token rejected" "Invalid token was not rejected"
 }
 
