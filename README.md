@@ -7,9 +7,9 @@
 ![SonarCloud](https://img.shields.io/badge/SonarCloud-Quality%20Gate-blue?style=for-the-badge)
 
 **Institution:** Escuela Colombiana de Ingenieria Julio Garavito  
-**Course:** SPTI - Seguridad y Privacidad de Tecnologias de la Informacion  
+**Course:** SPTI - Seguridad y Privacidad de Tecnologías de la Información  
 **Professor:** Javier Ivan Toquica Barrera  
-**Team:** Andersson David Sanchez Mendez, Cristian Santiago Pedraza Rodriguez, Jeisson David Sanchez Gomez
+**Team:** Andersson David Sánchez Méndez, Cristian Santiago Pedraza Rodriguez, Jeisson David Sánchez Gómez
 
 This repository implements a complete DevSecOps security monitoring layer for the LogiFlow production-style distributed system.
 
