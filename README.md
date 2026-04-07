@@ -70,7 +70,7 @@ flowchart LR
 
 - `architectures/unsecure`: attack surface baseline, vulnerability register, and STRIDE model.
 - `architectures/secure`: remediated architecture, controls matrix, and verification guidance.
-- `monitoring`: deployment and configuration for Falco, Prometheus, Grafana, Loki, and Promtail.
+- `monitoring`: deployment and configuration for Falco, Prometheus, Grafana, Loki, Promtail, Tempo, and OpenTelemetry Collector.
 - `dast`: OWASP ZAP scan configuration (baseline/full) and report parser.
 - `sast`, `sca`, `secrets-detection`: static and supply-chain security controls.
 - `tests`: formal test plan, penetration scripts, and evidence placeholders.
@@ -161,9 +161,18 @@ The `/` route may return `404` by design. Use health/API endpoints:
 - <http://localhost:3100/ready>
 - <http://localhost:3100/loki/api/v1/labels>
 
+### Tempo Traces (<http://localhost:3200>)
+
+Use these quick checks to confirm trace ingestion:
+
+- <http://localhost:3200/ready>
+- <http://localhost:3200/api/search?limit=5>
+
+If traces are flowing, `/api/search` returns recent `traceID` entries with root service names (for example `logiflow-gateway`).
+
 ### 🎥 Quick Demo Storyboard (Video)
 
-1. Show monitoring stack up (`docker ps` with grafana/prometheus/loki/promtail/falco).
+1. Show monitoring stack up (`docker ps` with grafana/prometheus/loki/promtail/falco/tempo/otel-collector).
 2. Show LogiFlow stack up (`docker compose ps` in logiflow repo).
 3. Run TC-01, TC-02, TC-03 and explain PASS/FAIL criteria.
 4. Run ZAP baseline + parser and show artifacts in `dast/reports`.

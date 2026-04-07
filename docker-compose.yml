@@ -19,6 +19,16 @@ services:
       file: ./monitoring/docker-compose.yml
       service: loki
 
+  tempo:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: tempo
+
+  otel-collector:
+    extends:
+      file: ./monitoring/docker-compose.yml
+      service: otel-collector
+
   promtail:
     extends:
       file: ./monitoring/docker-compose.yml

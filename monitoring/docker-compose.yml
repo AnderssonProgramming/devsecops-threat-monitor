@@ -67,6 +67,33 @@ services:
     networks:
       - logiflow-security-net
 
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: logiflow-tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+    networks:
+      - logiflow-security-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: logiflow-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector/otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml:ro
+    ports:
+      - "4318:4318"
+    depends_on:
+      - tempo
+    networks:
+      - logiflow-security-net
+
   promtail:
     image: grafana/promtail:latest
     container_name: logiflow-promtail

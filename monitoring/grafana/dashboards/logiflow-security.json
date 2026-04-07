@@ -3,9 +3,9 @@
   "uid": "logiflow-security",
   "version": 1,
   "schemaVersion": 39,
-  "refresh": "15s",
+  "refresh": "5s",
   "tags": ["logiflow", "security", "devsecops"],
-  "time": {"from": "now-6h", "to": "now"},
+  "time": {"from": "now-30m", "to": "now"},
   "links": [
     {
       "title": "Security Pipeline Status",
@@ -19,7 +19,7 @@
       "type": "timeseries",
       "title": "Auth Failures Over Time",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"refId": "A", "expr": "rate(logiflow_auth_failures_total[5m])", "legendFormat": "auth failures/sec"}],
+      "targets": [{"refId": "A", "expr": "sum(rate(logiflow_auth_failures_total[5m])) or vector(0)", "legendFormat": "auth failures/sec"}],
       "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
     },
     {
@@ -27,7 +27,7 @@
       "type": "gauge",
       "title": "Active Socket Connections by Role",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"refId": "A", "expr": "sum(logiflow_socket_connections{role=~\"admin|conductor|unauthorized\"})"}],
+      "targets": [{"refId": "A", "expr": "sum(logiflow_socket_connections{role=~\"admin|conductor|unauthorized\"}) or vector(0)"}],
       "gridPos": {"x": 12, "y": 0, "w": 6, "h": 8}
     },
     {
@@ -35,7 +35,7 @@
       "type": "timeseries",
       "title": "Webhook Request Rate",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"refId": "A", "expr": "rate(logiflow_webhook_requests_total[1m]) * 60", "legendFormat": "req/min"}],
+      "targets": [{"refId": "A", "expr": "(sum(rate(logiflow_webhook_requests_total[1m])) * 60) or vector(0)", "legendFormat": "req/min"}],
       "gridPos": {"x": 18, "y": 0, "w": 6, "h": 8}
     },
     {
@@ -51,7 +51,7 @@
       "type": "table",
       "title": "Top 5 Attacker IPs",
       "datasource": {"type": "loki", "uid": "loki"},
-      "targets": [{"refId": "A", "expr": "topk(5, sum by (remote_addr) (count_over_time({service=~\"gateway|realtime|automation\"} | json | remote_addr=~\".+\" [5m])))"}],
+      "targets": [{"refId": "A", "expr": "topk(5, sum by (service) (count_over_time({service=~\"gateway|realtime|falco\"} |= \"Unauthorized\" [15m])))"}],
       "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
     },
     {
@@ -67,7 +67,7 @@
       "type": "stat",
       "title": "Dependency CVE Summary",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"refId": "A", "expr": "logiflow_dependency_cve_total"}],
+      "targets": [{"refId": "A", "expr": "logiflow_dependency_cve_total or vector(0)"}],
       "gridPos": {"x": 8, "y": 16, "w": 8, "h": 8}
     },
     {
