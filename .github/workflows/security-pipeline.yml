@@ -139,6 +139,9 @@ jobs:
           repository: AnderssonProgramming/logiflow-cybersecurity-seminar
           path: logiflow
 
+      - name: Ensure external Docker network exists
+        run: docker network create logiflow-security-net || true
+
       - name: Start LogiFlow services
         working-directory: logiflow
         run: docker compose up -d
