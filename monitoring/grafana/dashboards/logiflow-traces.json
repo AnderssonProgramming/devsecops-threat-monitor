@@ -1,0 +1,53 @@
+{
+  "title": "LogiFlow Traces Dashboard",
+  "uid": "logiflow-traces",
+  "version": 1,
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "tags": ["logiflow", "tracing", "tempo", "devsecops"],
+  "time": { "from": "now-30m", "to": "now" },
+  "links": [
+    {
+      "title": "Open Grafana Explore (Tempo)",
+      "type": "link",
+      "url": "/explore?orgId=1&left=%7B%22datasource%22:%22tempo%22%7D"
+    },
+    {
+      "title": "Tempo API Search (Top 5)",
+      "type": "link",
+      "url": "http://localhost:3200/api/search?limit=5"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Instrumented Services",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Current Tracing Coverage\n\n- logiflow-gateway (NestJS API)\n- logiflow-realtime (Socket/Express)\n\n### Helpful Runtime Endpoints\n\n- Gateway health: http://localhost:3002/api/v1/health\n- Realtime metrics: http://localhost:3001/metrics\n- Tempo search API: http://localhost:3200/api/search?limit=5"
+      }
+    },
+    {
+      "id": 2,
+      "type": "text",
+      "title": "Trace Search Shortcuts",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Open in Grafana\n\n- [Explore Tempo](/explore?orgId=1&left=%7B%22datasource%22:%22tempo%22%7D)\n- [Security Dashboard](/d/logiflow-security/logiflow-security-dashboard)\n- [Threat Overview](/d/logiflow-threat-overview/threat-overview)\n\n### Direct API Links\n\n- [Recent traces (5)](http://localhost:3200/api/search?limit=5)\n- [Recent traces (20)](http://localhost:3200/api/search?limit=20)"
+      }
+    },
+    {
+      "id": 3,
+      "type": "text",
+      "title": "Trace Triage Workflow",
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "1. Run an auth or penetration test scenario.\n2. Open Tempo search and copy a fresh trace ID.\n3. Inspect root service and span duration for anomalies.\n4. Correlate trace timing with Falco/Loki alerts and Prometheus spikes."
+      }
+    }
+  ]
+}

@@ -4,6 +4,13 @@
   "version": 1,
   "schemaVersion": 39,
   "refresh": "5s",
+  "links": [
+    {
+      "title": "Open Traces Dashboard",
+      "type": "link",
+      "url": "/d/logiflow-traces/logiflow-traces-dashboard"
+    }
+  ],
   "panels": [
     {
       "id": 1,

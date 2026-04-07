@@ -11,6 +11,11 @@
       "title": "Security Pipeline Status",
       "type": "link",
       "url": "https://github.com/AnderssonProgramming/devsecops-threat-monitor/actions"
+    },
+    {
+      "title": "Open Traces Dashboard",
+      "type": "link",
+      "url": "/d/logiflow-traces/logiflow-traces-dashboard"
     }
   ],
   "panels": [
