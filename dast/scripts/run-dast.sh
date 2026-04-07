@@ -30,9 +30,18 @@ function convert_path_if_needed() {
   local input_path="$1"
   local docker_cmd="$2"
 
-  if [ "${docker_cmd}" = "docker.exe" ] && command -v wslpath >/dev/null 2>&1; then
-    wslpath -m "${input_path}"
-    return 0
+  if [ "${docker_cmd}" = "docker.exe" ]; then
+    # Prefer Git Bash/Cygwin conversion when available.
+    if command -v cygpath >/dev/null 2>&1; then
+      cygpath -m "${input_path}"
+      return 0
+    fi
+
+    # Fallback for WSL shells calling docker.exe.
+    if command -v wslpath >/dev/null 2>&1; then
+      wslpath -m "${input_path}"
+      return 0
+    fi
   fi
 
   echo "${input_path}"
@@ -50,10 +59,16 @@ fi
 
 REPORTS_MOUNT_PATH="$(convert_path_if_needed "${REPORTS_DIR}" "${DOCKER_CMD}")"
 
+echo "[ZAP] Docker command: ${DOCKER_CMD}"
+echo "[ZAP] Reports mount path: ${REPORTS_MOUNT_PATH}"
+
+HTML_REPORT="${REPORTS_DIR}/zap-report-${TIMESTAMP}.html"
+JSON_REPORT="${REPORTS_DIR}/zap-report-${TIMESTAMP}.json"
+
 "${DOCKER_CMD}" run --rm \
   --user "${ZAP_RUN_USER}" \
   --network host \
-  -v "${REPORTS_MOUNT_PATH}:/zap/wrk:rw" \
+  --mount "type=bind,source=${REPORTS_MOUNT_PATH},target=/zap/wrk" \
   "${ZAP_IMAGE}" \
   zap-baseline.py \
     -t "${LOGIFLOW_GATEWAY_URL}" \
@@ -63,4 +78,10 @@ REPORTS_MOUNT_PATH="$(convert_path_if_needed "${REPORTS_DIR}" "${DOCKER_CMD}")"
     -I \
     --auto
 
-echo "[ZAP] Report saved to ${REPORTS_DIR}/zap-report-${TIMESTAMP}.html"
+if [ ! -f "${HTML_REPORT}" ] || [ ! -f "${JSON_REPORT}" ]; then
+  echo "[ZAP] ERROR: Scan did not produce expected report files."
+  echo "[ZAP] Expected: ${HTML_REPORT} and ${JSON_REPORT}"
+  exit 1
+fi
+
+echo "[ZAP] Report saved to ${HTML_REPORT}"
