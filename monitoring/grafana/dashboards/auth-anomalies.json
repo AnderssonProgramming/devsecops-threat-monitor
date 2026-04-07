@@ -16,6 +16,12 @@
       "id": 1,
       "type": "timeseries",
       "title": "Auth Failures",
+      "links": [
+        {
+          "title": "Investigate In Tempo Explore",
+          "url": "/explore?orgId=1&left=%7B%22datasource%22:%22tempo%22%7D"
+        }
+      ],
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -37,6 +43,12 @@
       "id": 2,
       "type": "stat",
       "title": "Current Unauthorized Socket Attempts",
+      "links": [
+        {
+          "title": "Investigate In Tempo Explore",
+          "url": "/explore?orgId=1&left=%7B%22datasource%22:%22tempo%22%7D"
+        }
+      ],
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"

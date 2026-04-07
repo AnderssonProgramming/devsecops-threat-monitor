@@ -23,6 +23,12 @@
       "id": 1,
       "type": "timeseries",
       "title": "Auth Failures Over Time",
+      "links": [
+        {
+          "title": "Investigate In Tempo Explore",
+          "url": "/explore?orgId=1&left=%7B%22datasource%22:%22tempo%22%7D"
+        }
+      ],
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [{"refId": "A", "expr": "sum(rate(logiflow_auth_failures_total[5m])) or vector(0)", "legendFormat": "auth failures/sec"}],
       "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
@@ -47,6 +53,12 @@
       "id": 4,
       "type": "logs",
       "title": "Falco Alerts Feed",
+      "links": [
+        {
+          "title": "Correlate With Traces",
+          "url": "/explore?orgId=1&left=%7B%22datasource%22:%22tempo%22%7D"
+        }
+      ],
       "datasource": {"type": "loki", "uid": "loki"},
       "targets": [{"refId": "A", "expr": "{container=~\".*falco.*\"}"}],
       "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
