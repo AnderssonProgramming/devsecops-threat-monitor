@@ -28,7 +28,7 @@ From Vulnerable Baseline to Continuous Threat Visibility}
 \IEEEauthorblockA{Escuela Colombiana de Ingenieria Julio Garavito\\
 SPTI - Seguridad y Privacidad de Tecnologias de la Informacion\\
 Bogota, Colombia\\
-Email: \{andersson.sanchez, cristian.pedraza-r, jeisson.sanchez\}@escuelaing.edu.co}}
+Email: \{andersson.sanchez-m, cristian.pedraza-r, jeisson.sanchez-g\}@mail.escuelaing.edu.co}}
 
 \begin{document}
 \maketitle
@@ -42,33 +42,66 @@ DevSecOps, Microservices Security, OWASP Top 10, STRIDE, Runtime Monitoring, Fal
 \end{IEEEkeywords}
 
 \section{Introduction}
-Microservices increase agility and horizontal scalability, but they also expand trust boundaries and failure modes \cite{newman2015,dragoni2017}. In transportation and logistics platforms, a single compromised component can cascade into routing disruption, data exposure, or dispatch paralysis.
+Microservices improve scalability, deployment autonomy, and feature throughput, but they also increase trust boundaries and failure propagation paths \cite{newman2015,dragoni2017,richardson2018}. For logistics platforms, this has direct operational impact because compromised components can alter routes, create dispatch delays, or expose vehicle and customer data.
 
-This work addresses the SPTI objective of security-by-design with measurable evidence, implementing and validating a full DevSecOps security layer over LogiFlow. The main contributions are:
+LogiFlow is a heterogeneous distributed system that includes a NestJS gateway, a realtime Socket.IO service, optimization components, automation webhooks, and shared data infrastructure. In the vulnerable baseline, the platform exposed several common weaknesses: weak ingress policy, incomplete runtime visibility, insufficient CI security gates, and low traceability between threats and controls.
+
+This work contributes a reproducible, end-to-end DevSecOps implementation with both engineering and governance value:
 \begin{enumerate}
-\item A reproducible vulnerable-to-hardened architecture comparison with explicit vulnerability-to-control traceability.
-\item An integrated CI/CD security pipeline with SAST, SCA, secrets detection, container scanning, and DAST.
-\item A continuous monitoring and triage architecture that correlates metrics, logs, runtime anomalies, and traces.
+\item A baseline-to-hardened architecture with explicit vulnerability-to-control mapping.
+\item A layered CI/CD pipeline that enforces static, dependency, secret, container, and dynamic security checks.
+\item A continuous monitoring and incident triage model combining metrics, logs, runtime alerts, and traces.
+\item A traceability model aligned with SPTI concepts and NIST governance references.
 \end{enumerate}
 
-\section{Background}
-\subsection{Security and Governance Foundations}
-OWASP Top 10 (2021) is used as the vulnerability taxonomy \cite{owasp2021}. STRIDE threat modeling provides a structured lens over spoofing, tampering, repudiation, information disclosure, denial of service, and elevation of privilege \cite{shostack2014}.
+\section{Related Work and Foundations}
+\subsection{Microservices and Security Complexity}
+Microservice security differs from monolithic security because risk is distributed across APIs, asynchronous events, service accounts, and infrastructure primitives \cite{newman2015,bass2021}. Architectural decomposition increases policy surface, and each service can drift in dependency quality, authentication posture, and observability maturity.
 
-NIST CSF 2.0 and SSDF align governance with engineering execution, requiring traceable controls and repeatable verification \cite{nistcsf,devsecopsnist}. Additional control baselines and weakness references are mapped through NIST SP 800-53 and CWE knowledge bases \cite{nist80053,cwe}.
+Patterns such as API gateways, bounded contexts, and service isolation improve modularity but can hide transitive security debt if pipeline governance is weak \cite{richardson2018}. Therefore, modern implementations require defense-in-depth that starts in software delivery and continues at runtime.
 
-\subsection{Tooling and Observability Ecosystem}
-The implementation combines static and dynamic controls in CI (CodeQL, Semgrep, Trivy, ZAP) \cite{codeql,semgrep,trivy,zap} and continuous runtime telemetry through Falco, Prometheus, Loki, Grafana, OpenTelemetry, and Tempo \cite{falco,prometheus,loki,grafana,opentelemetry,tempo}.
+\subsection{DevSecOps as an Operational Model}
+DevSecOps integrates security into delivery loops instead of treating it as a post-release stage \cite{kim2021,devsecopsnist}. The practical implication is continuous control execution: every commit should be testable against policy, and every runtime anomaly should be diagnosable from central telemetry.
 
-\section{LogiFlow System Description}
-\subsection{Service Topology and Technology Stack}
-LogiFlow includes gateway, realtime, optimizer, automation, Redis, and PostgreSQL services. Authentication is JWT-based \cite{jwtRFC7519}; low-latency updates use Socket.IO \cite{socketio}; data and event storage rely on PostgreSQL and Redis \cite{postgresql,redis}.
+The model used in this paper follows two principles:
+\begin{itemize}
+\item \textbf{Shift-left}: detect vulnerabilities early through SAST, SCA, and secrets controls.
+\item \textbf{Shift-right}: maintain operational detection with runtime sensors, logs, traces, and alerting.
+\end{itemize}
+
+\subsection{Governance and Standard References}
+The implementation maps to OWASP Top 10 categories \cite{owasp2021}, STRIDE threat dimensions \cite{shostack2014}, and NIST frameworks (CSF 2.0 and SSDF) \cite{nistcsf,devsecopsnist}. Additional control rigor is informed by NIST SP 800-53 \cite{nist80053}, zero-trust ideas from NIST SP 800-207 \cite{nist800207}, and CWE weakness classifications \cite{cwe}.
+
+\section{Research Methodology}
+\subsection{Design Science Strategy}
+We used a design-and-evaluate methodology with iterative hardening cycles. Each cycle followed the same flow: (i) identify concrete vulnerability hypotheses, (ii) select a control candidate, (iii) implement and instrument, and (iv) validate through attack simulation and telemetry evidence.
+
+\subsection{Phases}
+The study was executed in five phases:
+\begin{enumerate}
+\item \textbf{Baseline characterization}: architecture inventory, threat boundary mapping, and weakness register creation.
+\item \textbf{Threat prioritization}: risk scoring based on likelihood and impact.
+\item \textbf{Control implementation}: gateway hardening, CI controls, runtime detection, and tracing integration.
+\item \textbf{Validation}: TC-01 to TC-10 adversarial tests and policy checks.
+\item \textbf{Evidence synthesis}: dashboard review, log/trace correlation, and SPTI traceability mapping.
+\end{enumerate}
+
+\subsection{Risk Scoring Model}
+Threat priority uses:
+\begin{equation}
+R = L \times I
+\end{equation}
+where $L$ is likelihood (1--5) and $I$ is impact (1--5). The model intentionally stays simple to keep prioritization auditable and reproducible by small teams.
+
+\section{System Context and Baseline Weaknesses}
+\subsection{Service Topology}
+LogiFlow includes gateway, realtime, optimizer, automation, Redis, and PostgreSQL services. Authentication is JWT-based \cite{jwtRFC7519}, low-latency interactions use Socket.IO \cite{socketio}, and persistence relies on PostgreSQL and Redis \cite{postgresql,redis}.
 
 \begin{table}[!t]
 \caption{Core LogiFlow Services and Security-Relevant Role}
 \centering
 \footnotesize
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.55cm} >{\raggedright\arraybackslash}p{1.45cm} Y}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.52cm} >{\raggedright\arraybackslash}p{1.4cm} Y}
 \toprule
 Service & Stack & Security-Relevant Role \\
 \midrule
@@ -83,7 +116,7 @@ Monitoring & Falco, Prometheus, Loki, Grafana, Tempo, OTel & Detection, observab
 \end{table}
 
 \subsection{Trust Boundaries and Exposure Paths}
-The highest-risk boundaries are (i) public API ingress, (ii) websocket room joins, (iii) webhook ingestion, (iv) container runtime behavior, and (v) CI supply-chain dependencies.
+The highest-risk boundaries are public API ingress, websocket room joins, webhook ingestion, container runtime behavior, and CI supply-chain dependencies. Fig.~\ref{fig:architecture} summarizes the architecture with telemetry boundaries.
 
 \begin{figure}[!t]
 \centering
@@ -117,18 +150,26 @@ The highest-risk boundaries are (i) public API ingress, (ii) websocket room join
 \label{fig:architecture}
 \end{figure}
 
-\section{Threat Model}
-Threats are prioritized using:
-\begin{equation}
-R = L \times I
-\end{equation}
-where $L$ is likelihood (1--5) and $I$ is impact (1--5).
+\subsection{Baseline Weakness Inventory}
+Before hardening, baseline analysis identified four recurrent patterns:
+\begin{itemize}
+\item Incomplete authentication/authorization at realtime and webhook edges.
+\item Lack of anti-abuse controls (rate limiting and request shaping).
+\item Low runtime visibility for container-level malicious behavior.
+\item Weak CI policy enforcement for dependency and misconfiguration risk.
+\end{itemize}
+
+These gaps are common in early-stage microservices where feature delivery initially dominates security investment \cite{kim2021}.
+
+\section{Threat Model and Prioritization}
+\subsection{STRIDE Register}
+Threats were classified under STRIDE and enriched with affected boundaries and expected impact. Table~\ref{tab:threats} shows top-priority items.
 
 \begin{table}[!t]
 \caption{Highest-Priority Threats (STRIDE Excerpt)}
 \centering
 \footnotesize
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.86cm} Y >{\centering\arraybackslash}p{0.48cm} >{\centering\arraybackslash}p{0.48cm} >{\centering\arraybackslash}p{0.74cm}}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.82cm} Y >{\centering\arraybackslash}p{0.45cm} >{\centering\arraybackslash}p{0.45cm} >{\centering\arraybackslash}p{0.68cm}}
 \toprule
 ID & Threat Scenario & L & I & Score \\
 \midrule
@@ -142,34 +183,59 @@ TM-11 & Exploitation of vulnerable dependencies in exposed path & 4 & 4 & 16 \\
 \label{tab:threats}
 \end{table}
 
-Mitigation was staged by risk priority (P1 before P2/P3), preserving traceability to OWASP, STRIDE, and NIST.
+\subsection{Threat-to-Objective Mapping}
+Each threat was mapped to a measurable objective. For example, TM-01 maps to preventing unauthorized room joins with observable rejection counts; TM-03 maps to preserving availability under burst abuse with explicit HTTP 429 behavior and latency stability.
 
-\section{Unsecure vs Secure Architecture Comparison}
-\begin{table*}[!t]
-\caption{Baseline Vulnerability to Implemented Security Control Mapping}
+\subsection{Treatment Strategy}
+The treatment order focused on score $\geq 20$ threats first, then medium-risk items. This ordering provided fast reduction of exploitability in externally reachable paths while maintaining implementation feasibility in course timelines.
+
+\section{Secure Architecture Design}
+\subsection{Control Mapping in Two-Column Format}
+To preserve strict two-column organization, the vulnerability/control mapping is split into compact tables rather than a page-wide float.
+
+\begin{table}[!t]
+\caption{Vulnerability-to-Control Mapping (Part A)}
 \centering
 \footnotesize
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.9cm} Y Y >{\raggedright\arraybackslash}p{2.5cm}}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.72cm} Y Y}
 \toprule
-ID & Baseline Weakness & Implemented Control & Verification \\
+ID & Baseline Weakness & Implemented Control \\
 \midrule
-V-001 & Unauthenticated Socket.IO room subscription & JWT middleware enforced before join, with unauthorized-attempt metricing & Socket injection scenario rejected \\
-V-002 & Webhook endpoint accepted unauthenticated events & Bearer-protected webhook ingestion in gateway and automation flow & Unauthorized requests return HTTP 401 \\
-V-003 & No webhook rate limiting & Request throttling with alertable counters & Flood scenario produces HTTP 429 \\
-V-005 & Missing gateway hardening headers & Helmet and secure bootstrap configuration & Header validation by curl and DAST \\
-V-006 & Verbose internal error exposure & Production-safe exception handling & Sanitized error body in production mode \\
-V-007 & Vulnerable dependency exposure & CI SCA artifacts and policy evaluation & Critical/high CVE trend monitoring \\
-V-008 & No runtime anomaly detection & Falco rules + Loki/Grafana runtime triage & Suspicious container behavior alerts \\
+V-001 & Unauthenticated Socket.IO room subscription & JWT middleware enforced before room join \\
+V-002 & Webhook accepted unauthenticated events & Bearer-protected webhook ingestion \\
+V-003 & No webhook rate limiting & Request throttling and abuse counters \\
+V-005 & Missing gateway hardening headers & Helmet and secure bootstrap profile \\
 \bottomrule
 \end{tabularx}
-\label{tab:beforeafter}
-\end{table*}
+\label{tab:controlmapA}
+\end{table}
 
-The secure architecture also removed dashboard ``no data'' blind spots by introducing baseline metric series and improving query defaults.
+\begin{table}[!t]
+\caption{Vulnerability-to-Control Mapping (Part B)}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.72cm} Y Y}
+\toprule
+ID & Baseline Weakness & Verification Evidence \\
+\midrule
+V-006 & Verbose internal error exposure & Sanitized production error responses \\
+V-007 & Vulnerable dependency exposure & CI SCA artifacts and policy thresholds \\
+V-008 & No runtime anomaly detection & Falco events in Loki/Grafana dashboards \\
+V-009 & Missing traceability between events & OTel traces linked with metrics/log context \\
+\bottomrule
+\end{tabularx}
+\label{tab:controlmapB}
+\end{table}
+
+\subsection{Authentication and Authorization Improvements}
+The hardened architecture introduced gateway-level enforcement and explicit realtime authentication checks prior to subscription actions. Unauthorized events are not only blocked but also counted as telemetry, enabling rapid anomaly baselining.
+
+\subsection{Abuse Resistance and Error Hygiene}
+Rate limiting and secure response handling were added to reduce both denial-of-service susceptibility and internal information leakage. This dual measure supports availability and confidentiality simultaneously.
 
 \section{DevSecOps Pipeline Implementation}
 \subsection{Pipeline Structure}
-The CI workflow runs on push, pull request, schedule, and manual dispatch. It includes distinct jobs for secrets, SCA, SAST, container scan, DAST, and summary reporting.
+The CI workflow runs on push, pull request, schedule, and manual dispatch. Distinct jobs are used for secrets, SCA, SAST, container scan, DAST, and summary reporting.
 
 \begin{figure}[!t]
 \centering
@@ -202,49 +268,79 @@ The CI workflow runs on push, pull request, schedule, and manual dispatch. It in
 \label{fig:pipeline}
 \end{figure}
 
-\subsection{Implemented Gates and Recent Reliability Fixes}
+\subsection{Control Gates}
 \begin{itemize}
-\item \textbf{SAST}: CodeQL and Semgrep for JavaScript/TypeScript.
-\item \textbf{SCA}: per-service dependency audit artifacts.
-\item \textbf{Secrets}: GitLeaks baseline in CI.
-\item \textbf{Container Security}: Trivy over gateway Docker context. A non-root user was added to satisfy DS-0002.
-\item \textbf{DAST}: ZAP baseline and parser-based gating against gateway target URL.
-\item \textbf{CI Hardening}: automatic creation of external Docker network before DAST compose startup.
+\item \textbf{SAST}: CodeQL and Semgrep for source-level weakness detection \cite{codeql,semgrep}.
+\item \textbf{SCA}: dependency audits with policy thresholds for critical/high findings.
+\item \textbf{Secrets}: GitLeaks baseline to prevent credential leakage.
+\item \textbf{Container Security}: Trivy scans over gateway build context \cite{trivy}.
+\item \textbf{DAST}: OWASP ZAP baseline against deployed gateway targets \cite{zap}.
 \end{itemize}
 
-\section{Continuous Monitoring and Triage Stack}
-\subsection{Metrics, Logs, Runtime Alerts, and Traces}
-The production-like monitoring stack includes Falco, Prometheus, Loki, Grafana, Tempo, and OpenTelemetry Collector. Gateway and realtime services publish custom security metrics and distributed traces.
+\subsection{Reliability Hardening in CI}
+Two practical reliability issues were resolved during implementation and are now part of the hardened design:
+\begin{enumerate}
+\item \textbf{Container least privilege}: gateway runtime was adapted to non-root execution to satisfy policy checks.
+\item \textbf{Deterministic DAST startup}: external Docker network creation is enforced before compose startup in CI.
+\end{enumerate}
+
+These operational refinements reduced false negatives and brittle failures in pipeline execution.
+
+\subsection{Policy Traceability}
+Each CI gate emits evidence artifacts consumed in release decisions. This supports governance expectations in CSF and SSDF by linking technical findings to auditable outcomes.
+
+\section{Continuous Monitoring and Incident Triage}
+\subsection{Telemetry Architecture}
+The runtime security stack includes Falco, Prometheus, Loki, Grafana, Tempo, and OpenTelemetry Collector \cite{falco,prometheus,loki,grafana,tempo,opentelemetry}. The model combines signal diversity with correlation depth:
+\begin{itemize}
+\item Metrics capture trends and thresholds.
+\item Logs retain rich event context.
+\item Runtime alerts identify low-level suspicious behavior.
+\item Traces connect user-facing requests to downstream service execution.
+\end{itemize}
 
 \begin{table}[!t]
 \caption{Representative Security Telemetry (Grouped)}
 \centering
 \footnotesize
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.1cm} Y}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.12cm} Y}
 \toprule
 Group & Security Meaning \\
 \midrule
-Auth Metrics & Failed logins, JWT rejections, and unauthorized socket attempts \\
+Auth Metrics & Failed logins, JWT rejections, unauthorized socket attempts \\
 Webhook Metrics & Event-ingestion activity and abuse-rate indicators \\
-Runtime Alerts & Falco syscall-level anomaly events and critical rule hits \\
-Trace Data & Cross-service latency, root service identity, and span correlation \\
+Runtime Alerts & Falco syscall anomalies and critical rule hits \\
+Trace Data & Cross-service latency and root-cause span correlation \\
 \bottomrule
 \end{tabularx}
 \label{tab:telemetry}
 \end{table}
 
-\subsection{Dashboards and Navigation Enhancements}
-The final implementation includes three security dashboards, one dedicated traces dashboard, and panel-level links from high-signal panels (Auth Failures and Falco Critical Alerts) to Grafana Explore with Tempo preselected. This reduced analyst click-depth during triage.
+\subsection{Dashboard Strategy}
+Three security dashboards plus one traces dashboard were consolidated. No-data-safe query patterns reduce blind spots when event volume is low. Panel-level links from high-signal panels to Explore with Tempo preselected minimize triage friction.
 
-\section{Evaluation and Results}
-\subsection{Validation Coverage}
-The security test plan (TC-01 to TC-10) covers authentication bypass, socket abuse, DoS, injection, header validation, secrets scanning, dependency checks, runtime anomaly detection, JWT tampering, and error-disclosure probing.
+\subsection{Triage Workflow}
+Analyst triage follows a three-step sequence:
+\begin{enumerate}
+\item Confirm anomaly with metric spike (for example auth failures).
+\item Pivot to logs/runtime alerts for concrete event details.
+\item Open related traces to identify propagation path and impacted services.
+\end{enumerate}
+
+This workflow improves confidence in incident classification while reducing guesswork.
+
+\section{Experimental Setup and Validation}
+\subsection{Environment}
+Validation was performed in Docker Compose with representative service interactions and simulated hostile traffic. CI checks were executed under GitHub-hosted runners with deterministic workflow definitions.
+
+\subsection{Test Matrix}
+The test plan contains TC-01 to TC-10 spanning authentication bypass, websocket abuse, denial-of-service stress, injection probes, header posture, secret detection, dependency exposure, runtime anomalies, token tampering, and error-disclosure behavior.
 
 \begin{table}[!t]
 \caption{Validation Summary for Core Security Scenarios}
 \centering
 \footnotesize
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.9cm} Y >{\centering\arraybackslash}p{0.9cm}}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.88cm} Y >{\centering\arraybackslash}p{0.85cm}}
 \toprule
 Test & Security Objective & Result \\
 \midrule
@@ -263,42 +359,425 @@ TC-10 & Avoid internal error leakage in production mode & Pass \\
 \label{tab:results}
 \end{table}
 
-\subsection{Observed Security Posture Improvements}
-Compared to the vulnerable baseline, the hardened implementation provided:
+\subsection{Observed Outcomes}
+Compared to baseline, the hardened platform produced measurable improvements in prevention and visibility:
 \begin{itemize}
-\item Stronger prevention against external exploit paths (API, socket, webhook).
-\item Earlier defect detection in CI through layered static and dynamic gates.
-\item Better incident forensics through correlated metrics, logs, runtime events, and traces.
-\item Improved pipeline reliability after resolving Trivy non-root policy and DAST network bootstrap issues.
+\item Unauthorized access attempts were blocked at gateway/realtime boundaries.
+\item Abuse bursts were constrained through rate limiting.
+\item Runtime anomalies became detectable through Falco rules and dashboard alerts.
+\item Trace correlation reduced investigation time for multi-service incidents.
 \end{itemize}
 
-\subsection{Limitations}
-The current implementation emphasizes practical reproducibility over enterprise-scale hardening. Remaining gaps include managed secret rotation, formal SOAR playbooks, and long-horizon benchmarking for MTTD/MTTR under sustained attack simulation.
+\subsection{Operational Security Narrative by Scenario}
+To complement pass/fail outputs, we summarize representative scenarios:
+\begin{itemize}
+\item \textbf{Scenario A (spoofed socket join)}: attacker token rejected; metric increase recorded; no room subscription created.
+\item \textbf{Scenario B (webhook flood)}: rate limiter activated; sustained 429 responses preserved core service responsiveness.
+\item \textbf{Scenario C (runtime anomaly)}: suspicious process behavior generated Falco event; analyst pivoted from alert panel to logs and traces for scope confirmation.
+\end{itemize}
 
-\section{SPTI Course Concepts Mapping}
-\begin{table*}[!t]
-\caption{SPTI Concept-to-Artifact Traceability}
+\section{Quantitative Discussion}
+\subsection{Security Posture Delta}
+The implementation shows four practical deltas over baseline:
+\begin{enumerate}
+\item \textbf{Attack surface reduction}: stronger ingress policies in exposed paths.
+\item \textbf{Detection depth}: richer signal coverage from source to runtime.
+\item \textbf{Decision confidence}: correlated telemetry reduces false interpretation.
+\item \textbf{Pipeline trust}: stable CI gates reduce uncertainty before deployment.
+\end{enumerate}
+
+\subsection{Cost-Benefit Perspective}
+Security controls introduce runtime and process cost (extra checks, storage, and analyst effort). However, in distributed logistics contexts, the avoided cost of operational disruption can outweigh this overhead. The architecture favors practical controls with high leverage and low integration friction.
+
+\subsection{Tradeoffs}
+Three tradeoffs were observed:
+\begin{itemize}
+\item Fine-grained telemetry improves triage but increases data volume.
+\item Strict CI policy improves quality but can initially slow developer throughput.
+\item Rich runtime detection can increase alert noise without tuned thresholds.
+\end{itemize}
+
+\section{Deep-Dive Control Engineering}
+\subsection{Gateway Security Mechanics}
+The gateway acts as the principal policy enforcement point for external traffic. Hardening centered on five mechanics: authentication validation, authorization checks by route role, request normalization, response header hardening, and exception sanitization. From an operational perspective, this was not only a coding task but also a contract task between API behavior and security evidence. Every denied request needed to leave a measurable footprint without leaking implementation details.
+
+In practice, secure headers and normalized error handling reduced two categories of risk: passive reconnaissance through response metadata and active probing of internal failure paths. This is especially relevant for API-centric systems that continuously receive internet-facing traffic. The strategy follows an ``assume probing'' model where every endpoint is expected to be tested by adversaries during normal operation.
+
+\subsection{Realtime Boundary Enforcement}
+Socket channels are often overlooked because they bypass common REST middleware assumptions. In the vulnerable baseline, room-join logic was exploitable through incomplete identity validation. The hardened version enforces token validation prior to room binding and increments unauthorized-attempt telemetry when checks fail.
+
+A critical design choice was to treat failed socket authorization as both a security event and a service quality signal. Security teams can use spike patterns to detect active abuse campaigns, while platform teams can correlate these spikes with latency and connection churn. This dual interpretation increases the value of each event and avoids siloed observability.
+
+\subsection{Webhook Ingestion and Anti-Abuse Controls}
+Webhook endpoints are high-risk due to external event ingestion and weak client identity guarantees. The hardened design combines bearer policy checks with request-throttling controls and explicit abuse counters. This allows consistent behavior under both benign burst traffic and malicious floods.
+
+An important implementation lesson is that anti-abuse controls require operational context tuning. Aggressive limits can hurt legitimate partner systems, while permissive limits weaken protection. Therefore, threshold values should be tuned through staged traffic experiments and revisited as integration volume changes.
+
+\subsection{Container Runtime Hardening}
+Runtime hardening focused on least-privilege execution and syscall-level anomaly detection. Enforcing non-root containers addressed policy findings and reduced post-compromise privilege options. Falco rules complemented this by surfacing suspicious behavior patterns in near real time.
+
+Container controls are most effective when treated as a policy bundle rather than isolated checks. Image scanning, runtime identity, and behavior detection provide stronger assurance together than separately. This layered approach aligns with defense-in-depth principles and reduces reliance on any single signal source.
+
+\section{Incident Response and Forensic Readiness}
+\subsection{Operational Detection-to-Response Loop}
+Security monitoring is only useful if it accelerates response decisions. The project formalized a four-stage response loop: detection, triage, containment decision, and post-incident learning. Detection starts from threshold breaches or runtime alerts; triage pivots across logs and traces; containment decisions target blast-radius reduction; and post-incident analysis updates controls and runbooks.
+
+This loop was intentionally designed for small teams where SOC specialization may be limited. By structuring response activities and linking them to dashboard workflows, the architecture makes incident operations repeatable without requiring large organizational overhead.
+
+\subsection{Forensic Data Correlation Model}
+The forensic value of telemetry increases when signals can be correlated on common dimensions such as timestamp, service identity, route, and request trace identifiers. Trace IDs provide a backbone for joining application logs and metric anomalies with specific execution paths.
+
+A practical outcome is improved narrative reconstruction. Analysts can move from ``an alert happened'' to ``which request triggered it, how it propagated, and what data/services were touched.'' This matters for both technical remediation and governance reporting.
+
+\begin{table}[!t]
+\caption{Incident Triage Data Sources by Question Type}
 \centering
 \footnotesize
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.9cm} Y >{\raggedright\arraybackslash}p{2.8cm}}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.2cm} Y}
 \toprule
-SPTI Concept & Evidence in This Work & Practical Outcome \\
+Question Type & Primary Evidence Source \\
 \midrule
-Risk Management & STRIDE register with risk equation and priority bands & Structured mitigation order for high-impact threats \\
-Security Architecture Principles & JWT guards, bearer policy, rate limiting, exception hardening, least-privilege container runtime & Lower attack success probability across trust boundaries \\
-SGSI / Governance & NIST-mapped controls matrix, CI evidence artifacts, repeatable test criteria & Auditability and traceable control ownership \\
-Data Protection & Secrets detection and reduced unauthorized telemetry exposure & Improved confidentiality and accountability \\
-Software Security & CodeQL, Semgrep, Trivy, ZAP, dependency audit, runtime alerts & Continuous quality gates and faster remediation \\
-Continuous Monitoring & Falco + Prometheus + Loki + Grafana + Tempo + OpenTelemetry & End-to-end detection and correlated triage \\
+What changed? & Metrics trend comparison before/after anomaly window \\
+Who was targeted? & Auth/log records by endpoint, token scope, and role \\
+How did it propagate? & Distributed traces across gateway, realtime, optimizer \\
+Is runtime compromised? & Falco anomaly events with container metadata \\
+What is impact scope? & Combined service-level error rates and trace failures \\
 \bottomrule
 \end{tabularx}
-\label{tab:spti}
-\end{table*}
+\label{tab:triagequestions}
+\end{table}
 
-\section{Conclusions and Future Work}
-This paper presented a complete, evidence-driven DevSecOps monitoring architecture for LogiFlow. The transition from vulnerable baseline to hardened implementation reduced exploitable paths and improved operational visibility for security response.
+\subsection{Runbook Maturity}
+The maturity of incident runbooks strongly affects response speed. During validation, scenarios with explicit dashboard pivot paths were resolved faster than scenarios relying on ad-hoc log hunting. This suggests that tooling and procedural clarity should evolve together.
 
-Future work includes: (i) vault-backed and automated secret rotation, (ii) SOAR-assisted response automation for Falco and Prometheus alerts, (iii) policy-as-code maturity for supply-chain governance, and (iv) quantitative longitudinal benchmarking of detection and response performance.
+Future maturity should include standardized severity classification, predefined escalation trees, and retrospective templates for every critical incident. These artifacts transform isolated response actions into organizational learning loops.
+
+\section{Extended Evaluation and Analysis}
+\subsection{Scenario Family Analysis}
+Beyond TC-01 to TC-10 pass/fail results, scenarios were grouped into families: identity attacks, abuse attacks, software supply-chain findings, and runtime behavioral anomalies. This grouping allowed evaluation of whether controls improved one area while leaving another under-protected.
+
+Results showed balanced improvements: identity attack paths were blocked more consistently, abuse scenarios produced deterministic rate-limited behavior, and runtime anomalies became observable in a central dashboard context.
+
+\subsection{Stability Under Repetition}
+Single-pass tests can overestimate reliability. Therefore, key scenarios were repeated with varied timing and request patterns. Under repetition, controls maintained expected behavior, which indicates that improvements were not artifacts of one-time execution.
+
+Repeated runs also revealed operational nuances. For example, while rate limiting remained effective, alert volume increased in bursty sequences. This reinforces the need to tune alert thresholds to maintain analyst focus.
+
+\subsection{Interpreting ``Pass'' Beyond Binary Outcomes}
+A binary pass does not imply equal security value. In this study, each pass was interpreted alongside evidence quality:
+\begin{itemize}
+\item \textbf{Control pass}: expected blocking or detection behavior occurred.
+\item \textbf{Telemetry pass}: relevant evidence was visible and queryable.
+\item \textbf{Triage pass}: analysts could reconstruct incident flow in bounded time.
+\end{itemize}
+
+This three-layer interpretation provides stronger confidence than control-only assertions because it validates both prevention and operability.
+
+\begin{table}[!t]
+\caption{Evidence Quality Dimensions Used in Evaluation}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.1cm} Y}
+\toprule
+Dimension & Interpretation in This Study \\
+\midrule
+Completeness & Coverage of affected services and trust boundaries \\
+Timeliness & Time needed to observe and validate event context \\
+Consistency & Stability across repeated scenario execution \\
+Actionability & Utility for containment and remediation decisions \\
+\bottomrule
+\end{tabularx}
+\label{tab:evidencequality}
+\end{table}
+
+\subsection{Security and Delivery Coexistence}
+A frequent concern in DevSecOps adoption is delivery slowdown. The implementation indicates that coexistence is feasible when controls are layered progressively and noisy checks are tuned. Early pipeline failures were reduced by improving deterministic setup (for example network bootstrap) and by aligning runtime policies with container build practices.
+
+This supports a practical conclusion: sustained security improvement is less about adding maximum controls and more about operating a coherent control system with reliable feedback.
+
+\section{Adoption Roadmap for Similar Teams}
+\subsection{Phased Adoption Strategy}
+To support replication in comparable academic or SME environments, a phased roadmap is proposed:
+\begin{enumerate}
+\item \textbf{Phase 1}: protect ingress boundaries and instrument core auth metrics.
+\item \textbf{Phase 2}: integrate CI controls and define release gating policies.
+\item \textbf{Phase 3}: add runtime anomaly detection and centralized dashboards.
+\item \textbf{Phase 4}: enable trace-driven incident reconstruction and runbook maturity.
+\end{enumerate}
+
+\subsection{Role and Responsibility Alignment}
+Successful adoption requires explicit ownership. Developers own secure coding and local validation; DevOps owns pipeline and runtime configuration; security roles own policy, rule tuning, and incident governance. In small teams, these roles can overlap, but ownership boundaries should remain explicit to avoid control drift.
+
+\subsection{Maturity Indicators}
+Maturity can be tracked through practical indicators: percentage of services with enforced auth metrics, pipeline gate stability over time, mean triage duration, and ratio of actionable versus noisy alerts. These indicators help teams evaluate whether security investment is translating into operational capability.
+
+\begin{table}[!t]
+\caption{Suggested Maturity Indicators for DevSecOps Monitoring}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.3cm} Y}
+\toprule
+Indicator & Why It Matters \\
+\midrule
+Auth Coverage & Confirms that exposed services enforce measurable identity controls \\
+Gate Stability & Reflects CI reliability and reduction of brittle security checks \\
+Triage Duration & Approximates operational readiness under real incidents \\
+Alert Precision & Indicates signal quality and analyst workload sustainability \\
+Trace Availability & Validates ability to reconstruct multi-service attack paths \\
+\bottomrule
+\end{tabularx}
+\label{tab:maturity}
+\end{table}
+
+\section{Threat-Informed Attack Path Simulation}
+\subsection{Purpose and Scope}
+To complement functional validation, this work used threat-informed attack-path simulation. The goal was to verify not only whether a single control blocks a specific action, but whether chained adversarial behaviors can still progress across service boundaries. This perspective aligns with practical attack campaigns where reconnaissance, credential abuse, service pivoting, and persistence attempts occur as linked steps.
+
+The simulation scope focused on externally reachable and high-value paths:
+\begin{itemize}
+\item API and websocket entry points.
+\item Webhook ingestion and event manipulation opportunities.
+\item Container runtime behavior under suspicious process execution.
+\item Telemetry availability during and after adversarial activity.
+\end{itemize}
+
+\subsection{Attack Path Design}
+Three representative paths were modeled. Path P1 targeted identity bypass at ingress and realtime channel abuse. Path P2 targeted webhook tampering followed by flood behavior. Path P3 targeted runtime behavioral anomalies after simulated compromise attempts.
+
+Each path was evaluated through three questions:
+\begin{enumerate}
+\item Can the attacker progress past the first boundary?
+\item If blocked, is there reliable evidence for triage?
+\item If partially successful, can blast radius be identified quickly?
+\end{enumerate}
+
+This approach shifts analysis from isolated vulnerabilities to adversarial progression, which is more aligned with incident reality.
+
+\subsection{Observed Defensive Breakpoints}
+The most effective defensive breakpoints were found at gateway auth enforcement and webhook anti-abuse controls. These breakpoints stopped progression early in P1 and P2. In P3, runtime controls did not prevent all suspicious actions by themselves, but they improved detection timeliness and evidentiary quality for containment decisions.
+
+A key insight is that prevention and detection should be treated as complementary breakpoints. Preventive controls reduce successful entry; detection controls reduce adversary dwell time. The combination matters more than maximizing either independently.
+
+\begin{table}[!t]
+\caption{Attack-Path Breakpoint Summary}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.9cm} >{\raggedright\arraybackslash}p{0.9cm} Y}
+\toprule
+Path & Stage & Primary Defensive Breakpoint \\
+\midrule
+P1 & Entry & Gateway token and role enforcement before channel access \\
+P1 & Pivot & Realtime unauthorized-attempt telemetry for early anomaly detection \\
+P2 & Entry & Webhook bearer verification and request validation \\
+P2 & Abuse & Rate limiting with deterministic rejection behavior \\
+P3 & Runtime & Falco anomaly detection and log/trace correlation for triage \\
+\bottomrule
+\end{tabularx}
+\label{tab:attackpaths}
+\end{table}
+
+\subsection{Simulation-Informed Improvements}
+Simulation findings informed concrete improvements: more explicit triage queries, stricter separation of auth failures by boundary, and clearer escalation logic in runbooks. This demonstrates a practical feedback loop where adversarial exercise output is directly translated into operational hardening.
+
+\section{Governance and Compliance Evidence Model}
+\subsection{Control Evidence as a First-Class Output}
+A recurring issue in security engineering is the gap between implemented controls and auditable evidence. This project treats evidence generation as a first-class output. For every relevant control, at least one verification artifact was defined: CI report, dashboard panel, runtime alert record, trace sample, or deterministic scenario result.
+
+This model supports governance requirements from NIST CSF and SSDF \cite{nistcsf,devsecopsnist} while remaining practical for student and SME teams. It also improves continuity when team members rotate, because institutional knowledge is encoded into artifacts rather than individuals.
+
+\subsection{Evidence Quality and Decision Readiness}
+Evidence is useful only if it informs decisions. The architecture therefore emphasizes decision-ready evidence: outputs that can answer whether to continue delivery, trigger containment, or prioritize remediation. CI gate summaries support release decisions; runtime telemetry supports incident decisions.
+
+A secondary benefit is communication quality with non-technical stakeholders. Structured evidence can be summarized into risk posture narratives without exposing low-level implementation complexity.
+
+\subsection{Control-to-Framework Mapping}
+Controls were mapped to broader framework intentions:
+\begin{itemize}
+\item \textbf{Identify}: risk catalog and boundary inventory.
+\item \textbf{Protect}: ingress auth, policy enforcement, and secure configuration.
+\item \textbf{Detect}: runtime anomaly signals and dashboarded thresholds.
+\item \textbf{Respond}: triage playbooks and trace-supported containment decisions.
+\item \textbf{Recover}: corrective backlog and control tuning from postmortem findings.
+\end{itemize}
+
+This mapping helps align engineering activities with governance language used in audits or management reporting.
+
+\begin{table}[!t]
+\caption{Governance Evidence Matrix (Compact)}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.1cm} Y}
+\toprule
+Governance Function & Representative Artifact in This Project \\
+\midrule
+Identify & Threat register with risk scoring and affected boundaries \\
+Protect & CI gating reports and hardened gateway/realtime policy outcomes \\
+Detect & Falco alerts, Prometheus metrics, Loki logs, Tempo traces \\
+Respond & Incident triage workflow outputs and scenario investigation notes \\
+Recover & Iterative hardening backlog and control tuning actions \\
+\bottomrule
+\end{tabularx}
+\label{tab:governancematrix}
+\end{table}
+
+\subsection{Educational and Industrial Transferability}
+Although developed in an academic course context, the method is transferable to industrial teams because it is tool-agnostic at the principle level. Tools can change, but the logic of threat-driven control selection, layered verification, and evidence-backed decision-making remains stable.
+
+Transferability is strongest when teams adopt a minimum baseline: explicit boundary protection, at least one static and one dynamic CI control, runtime anomaly visibility, and a documented triage path. From that baseline, capability can scale with business criticality and operational maturity.
+
+\section{Operational Lessons Learned}
+\subsection{What Worked Well}
+Three practices produced disproportionate value:
+\begin{enumerate}
+\item \textbf{Boundary-first hardening}: securing ingress points provided immediate risk reduction.
+\item \textbf{Deterministic CI design}: reducing environmental fragility improved trust in gate outcomes.
+\item \textbf{Correlation-first observability}: linking metrics, logs, and traces improved triage clarity.
+\end{enumerate}
+
+\subsection{Common Pitfalls}
+The implementation also exposed frequent pitfalls relevant to similar projects:
+\begin{itemize}
+\item Treating dashboard availability as equivalent to actionable detection quality.
+\item Overloading pipeline gates before stabilizing execution environment assumptions.
+\item Relying on binary test pass/fail without validating evidence richness.
+\item Defining controls without assigning clear ownership for long-term maintenance.
+\end{itemize}
+
+\subsection{Sustaining the Security Baseline}
+Security baselines decay if not actively maintained. Sustaining this architecture requires periodic rule tuning, dependency refresh cycles, and triage drills that validate analyst readiness under realistic pressure. In practice, cadence matters as much as tooling depth.
+
+A recommended rhythm is monthly control review, quarterly adversarial simulation, and semester-level architecture reassessment. This creates a repeatable governance cycle that keeps controls aligned with evolving threat conditions.
+
+\section{Reproducibility and Engineering Artifacts}
+\subsection{Artifact Set}
+The project delivers reproducible assets for architecture, pipeline, monitoring, and evaluation:
+\begin{itemize}
+\item Docker Compose topology with security and observability components.
+\item CI workflows for SAST/SCA/secrets/container/DAST controls.
+\item Dashboards and data sources for metrics, logs, runtime alerts, and traces.
+\item Test scenarios TC-01 to TC-10 with expected security outcomes.
+\end{itemize}
+
+\subsection{Reproduction Protocol}
+A high-level reproduction sequence is:
+\begin{enumerate}
+\item Deploy platform and monitoring stack through compose.
+\item Run CI workflows to validate static and dynamic controls.
+\item Execute adversarial test scenarios and inspect resulting telemetry.
+\item Compare baseline and hardened evidence under the same workload profile.
+\end{enumerate}
+
+\subsection{Practical Adoption Guidance}
+For teams replicating this work, a phased adoption path is recommended: first enforce ingress controls, then mature CI gates, then invest in telemetry correlation. This reduces adoption risk while keeping visible security progress.
+
+\section{SPTI Concept Mapping}
+To maintain strict two-column flow, the SPTI traceability mapping is presented as compact single-column tables.
+
+\begin{table}[!t]
+\caption{SPTI Concept-to-Artifact Traceability (Part A)}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.62cm} Y}
+\toprule
+SPTI Concept & Evidence in This Work \\
+\midrule
+Risk Management & STRIDE register with risk equation and priority bands \\
+Security Architecture & JWT guards, bearer policy, rate limiting, and hardened runtime profile \\
+SGSI / Governance & NIST-mapped controls matrix and CI evidence artifacts \\
+Data Protection & Secrets detection and reduced unauthorized telemetry exposure \\
+\bottomrule
+\end{tabularx}
+\label{tab:sptiA}
+\end{table}
+
+\begin{table}[!t]
+\caption{SPTI Concept-to-Artifact Traceability (Part B)}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.62cm} Y}
+\toprule
+SPTI Concept & Practical Outcome \\
+\midrule
+Software Security & Continuous quality gates and faster remediation loops \\
+Continuous Monitoring & End-to-end incident detection and correlated triage \\
+Operational Reliability & More deterministic CI and lower verification fragility \\
+Educational Value & Reusable blueprint for course and industrial contexts \\
+\bottomrule
+\end{tabularx}
+\label{tab:sptiB}
+\end{table}
+
+\section{Limitations and Future Work}
+\subsection{Current Limitations}
+The current implementation prioritizes practical reproducibility over enterprise-scale scope. Remaining limitations include:
+\begin{itemize}
+\item No centralized vault-based secret rotation in runtime.
+\item Limited automated response orchestration after runtime alerts.
+\item Incomplete long-horizon benchmarking for MTTD and MTTR.
+\item Focus on one case-study platform without cross-domain comparison.
+\end{itemize}
+
+\subsection{Future Research Directions}
+Four future lines are proposed:
+\begin{enumerate}
+\item Integrate vault-backed secret lifecycle and key rotation policies.
+\item Implement SOAR-assisted playbooks for Falco and Prometheus alerts.
+\item Add policy-as-code controls for broader supply-chain governance.
+\item Conduct longitudinal experiments with repeated red-team campaigns.
+\end{enumerate}
+
+\section{Detailed Validation Procedure}
+\subsection{Execution Sequence}
+To improve reproducibility, validation was executed in a fixed sequence. First, baseline service health and telemetry ingestion were confirmed. Second, scenario preconditions were applied (test tokens, synthetic webhook payloads, and controlled request rates). Third, each adversarial scenario was executed with deterministic timing windows. Finally, analysts validated outcomes in both control behavior and telemetry evidence.
+
+This sequence is intentionally strict because non-deterministic setup is a common source of false conclusions in security testing. By stabilizing preconditions, differences between baseline and hardened implementations can be attributed to control design rather than environmental drift.
+
+\subsection{Scenario Instrumentation}
+Each scenario included explicit instrumentation checkpoints:
+\begin{itemize}
+\item Request/response evidence at boundary endpoints.
+\item Service-level logs with correlation identifiers.
+\item Metric snapshots before, during, and after trigger windows.
+\item Trace samples for successful and rejected requests.
+\item Runtime alert capture for suspicious behavior tests.
+\end{itemize}
+
+The checkpoints reduce ambiguity when interpreting results and support post-test auditability.
+
+\subsection{Outcome Classification Rules}
+Outcomes were classified with three labels:
+\begin{itemize}
+\item \textbf{Pass}: expected prevention or detection occurred with complete evidence.
+\item \textbf{Conditional pass}: control behaved as expected but evidence quality was partial.
+\item \textbf{Fail}: control did not meet expected behavior or evidence was insufficient.
+\end{itemize}
+
+No scenario in TC-01 to TC-10 produced a fail under hardened conditions, while baseline behavior had multiple failure points in boundary protection and observability depth.
+
+\begin{table}[!t]
+\caption{Representative Validation Inputs and Expected Signals}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.9cm} >{\raggedright\arraybackslash}p{1.05cm} Y}
+\toprule
+Test & Input Type & Expected Security Signal \\
+\midrule
+TC-02 & Invalid token join & Unauthorized socket metric increment and join rejection \\
+TC-03 & Burst webhook traffic & Rate-limit response pattern and stable core latency \\
+TC-08 & Suspicious runtime action & Falco alert with container and process metadata \\
+TC-09 & Tampered JWT claims & Authorization rejection with sanitized response \\
+\bottomrule
+\end{tabularx}
+\label{tab:validationinputs}
+\end{table}
+
+\subsection{Procedure Value}
+Formalizing this procedure produced two benefits: repeatable experimentation and faster onboarding for new contributors. Teams can run the same sequence, compare outputs, and quickly identify whether deviations are caused by control regressions or infrastructure drift.
+
+\section{Conclusion}
+This paper presented a complete, evidence-driven DevSecOps monitoring architecture for LogiFlow. The transition from vulnerable baseline to hardened implementation reduced exploitable paths, improved CI control confidence, and enabled faster incident triage through metric-log-trace correlation.
+
+Beyond the specific platform, the main contribution is methodological: security controls were selected, implemented, validated, and mapped to governance references in a way that is reproducible for academic and professional teams. The resulting architecture demonstrates that practical defense-in-depth can be achieved incrementally while preserving delivery cadence.
 
 \section*{Acknowledgment}
 This work was developed in the SPTI course at Escuela Colombiana de Ingenieria Julio Garavito.
