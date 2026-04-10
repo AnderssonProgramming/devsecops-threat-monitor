@@ -27,6 +27,7 @@ This project implements a complete **DevSecOps monitoring and validation layer**
 - [📡 Monitoring Validation Guide](#-monitoring-validation-guide)
 - [🏗️ Architecture Comparison](#️-architecture-comparison)
 - [✅ Deliverables](#-deliverables)
+- [📘 IEEE Paper](#-ieee-paper)
 - [📁 Evidence and Reporting](#-evidence-and-reporting)
 - [💡 Operational Recommendations](#-operational-recommendations)
 - [📄 License](#-license)
@@ -191,6 +192,12 @@ If traces are flowing, `/api/search` returns recent `traceID` entries with root 
 - [x] April 6 - Presentation outline and demo-ready scripts
 - [x] April 8 - IEEE paper outline
 - [x] April 11 - Final integrated DevSecOps monitoring package
+
+## 📘 IEEE Paper
+
+Access the final report here:
+
+- [IEEE Final Report (PDF)](docs/ieee-paper.pdf)
 
 ## 📁 Evidence and Reporting
 
