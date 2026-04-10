@@ -95,6 +95,10 @@ docker network create logiflow-security-net
 
 ## 🎬 Demo Step by Step
 
+Watch the full demo video on YouTube:
+
+- [LogiFlow DevSecOps Security Demo](https://youtu.be/esmaYBYShMA)
+
 Before running the scripts, make sure LogiFlow services are up:
 
 ```bash
