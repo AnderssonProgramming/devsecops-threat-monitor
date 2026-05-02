@@ -34,7 +34,7 @@ rules:
   - id: logiflow-verbose-error-response
     patterns:
       - pattern-either:
-          - pattern: res.status(...).json({ ..., stack: $STACK, ... })
+          - pattern: "res.status(...).json({ ..., stack: $STACK, ... })"
           - pattern: throw new Error($MESSAGE)
     message: "Review for verbose error disclosure in production paths."
     severity: INFO
