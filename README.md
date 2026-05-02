@@ -28,7 +28,8 @@ This project implements a complete **DevSecOps monitoring and validation layer**
 - [🏗️ Architecture Comparison](#️-architecture-comparison)
 - [✅ Deliverables](#-deliverables)
 - [📘 IEEE Paper](#-ieee-paper)
-- [📁 Evidence and Reporting](#-evidence-and-reporting)
+- [�️ Final Presentation Slides](#-final-presentation-slides)
+- [�📁 Evidence and Reporting](#-evidence-and-reporting)
 - [💡 Operational Recommendations](#-operational-recommendations)
 - [📄 License](#-license)
 
@@ -203,7 +204,13 @@ Access the final report here:
 
 - [IEEE Final Report (PDF)](docs/ieee-paper.pdf)
 
-## 📁 Evidence and Reporting
+## �️ Final Presentation Slides
+
+Access the slides used for the final project presentation:
+
+- [Seminar Presentation Slides (PDF)](docs/seminar-presentation.pdf)
+
+## �📁 Evidence and Reporting
 
 - Store DAST reports in `dast/reports`.
 - Store test logs/screenshots in `tests/results`.
