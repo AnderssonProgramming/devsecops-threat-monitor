@@ -218,4 +218,4 @@ Access the final report here:
 
 ## 📄 License
 
-MIT License. See [LICENSE](LICENSE).
+Apache License Version 2.0. See [LICENSE](LICENSE).
