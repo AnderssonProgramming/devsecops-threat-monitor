@@ -32,6 +32,10 @@ rules:
       owasp: "A05:2021"
 
   - id: logiflow-verbose-error-response
+    paths:
+      include:
+        - "services/**"
+        - "src/**"
     patterns:
       - pattern-either:
           - pattern: "res.status(...).json({ ..., stack: $STACK, ... })"
